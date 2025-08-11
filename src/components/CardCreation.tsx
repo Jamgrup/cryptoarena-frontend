@@ -90,7 +90,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
     }
   };
 
-  // Execute mint transaction
+  // Execute mint transaction with fallback methods
   const executeMint = async () => {
     if (!tonConnectUI || !mintInfo || !address) return;
 
@@ -98,12 +98,6 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       setLoading(true);
       setError(null);
       setSuccess(null);
-
-      // Production mode - mint actual NFT cards
-      const isTestMode = false; // Production NFT minting enabled
-      
-      let targetAddress = mintInfo.collectionAddress;
-      let amount = mintInfo.mintValue; // Use backend-provided mint value
 
       // Create proper mint payload for Card Collection contract
       const mintPayload = beginCell()
@@ -118,32 +112,51 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutes
         messages: [
           {
-            address: targetAddress,
-            amount: toNano(amount).toString(),
+            address: mintInfo.collectionAddress,
+            amount: toNano(mintInfo.mintValue).toString(),
             payload: mintPayload,
           },
         ],
       };
 
-      // Send transaction via TON Connect
-      const result = await tonConnectUI.sendTransaction(transaction);
-      
-      if (result && result.boc) {
-        setSuccess(`Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
+      // Try TON Connect first, then fallback to ton:// link
+      try {
+        console.log('Attempting TON Connect transaction...');
+        const result = await tonConnectUI.sendTransaction(transaction);
         
-        // Clear mint info to reset state
-        setMintInfo(null);
+        if (result && result.boc) {
+          setSuccess(`Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
+          setMintInfo(null);
+          
+          setTimeout(() => {
+            fetchCollectionInfo();
+          }, 5000);
+          return;
+        }
+      } catch (tonConnectError) {
+        console.warn('TON Connect failed, trying fallback:', tonConnectError);
         
-        // Refresh collection info after successful mint
+        // Fallback: Create ton:// deep link
+        const tonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${toNano(mintInfo.mintValue)}&bin=${mintPayload}`;
+        
+        setSuccess(`Opening Tonkeeper... If it doesn't open automatically, copy this link: ${tonLink}`);
+        
+        // Try to open the link
+        window.open(tonLink, '_blank');
+        
+        // Reset state after some time
         setTimeout(() => {
+          setMintInfo(null);
           fetchCollectionInfo();
-        }, 5000);
-      } else {
-        throw new Error('Transaction was not confirmed');
+        }, 10000);
+        
+        return;
       }
 
+      throw new Error('Transaction was not confirmed');
+
     } catch (err: any) {
-      // Handle specific TON Connect errors
+      // Handle errors
       let errorMessage = 'Failed to send mint transaction';
       
       if (err?.message?.includes('User cancelled') || err?.message?.includes('User rejected')) {
@@ -151,15 +164,13 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       } else if (err?.message?.includes('Timeout')) {
         errorMessage = 'Transaction timed out. Please try again';
       } else if (err?.message?.includes('Transaction was not sent')) {
-        errorMessage = 'Transaction failed. Please refresh and try again';
+        errorMessage = 'TON Connect bridge issue. Try again or use Tonkeeper directly';
       } else if (err?.message) {
         errorMessage = err.message;
       }
       
       setError(errorMessage);
       console.error('Mint execution error:', err);
-      
-      // Reset mint info on error to allow retry
       setMintInfo(null);
     } finally {
       setLoading(false);
