@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTonConnectUI } from '@tonconnect/ui-react';
-import { Address, toNano } from '@ton/core';
+import { Address, toNano, beginCell } from '@ton/core';
 
 interface CardCreationProps {
   className?: string;
@@ -96,6 +96,15 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       setError(null);
       setSuccess(null);
 
+      // Prepare mint payload (op::mint_card = 0x2001)
+      const mintPayload = beginCell()
+        .storeUint(0x2001, 32) // op::mint_card
+        .storeUint(0, 64) // query_id
+        .storeAddress(Address.parse(address)) // recipient
+        .endCell()
+        .toBoc()
+        .toString('base64');
+
       // Prepare transaction
       const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutes
@@ -103,7 +112,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
           {
             address: mintInfo.collectionAddress,
             amount: toNano(mintInfo.mintValue).toString(),
-            payload: '', // Simple mint - no payload needed for basic mint
+            payload: mintPayload,
           },
         ],
       };
