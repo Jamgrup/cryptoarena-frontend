@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTonConnectUI } from '@tonconnect/ui-react';
+import { useTonConnectUI, useTonAddress, useTonWallet } from '@tonconnect/ui-react';
 import { Address, toNano, beginCell } from '@ton/core';
 
 interface CardCreationProps {
@@ -26,6 +26,8 @@ interface MintInfo {
 
 export function CardCreation({ className = '' }: CardCreationProps) {
   const [tonConnectUI] = useTonConnectUI();
+  const wallet = useTonWallet();
+  const address = useTonAddress();
   const [collectionInfo, setCollectionInfo] = useState<CollectionInfo | null>(null);
   const [mintInfo, setMintInfo] = useState<MintInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -86,10 +88,8 @@ export function CardCreation({ className = '' }: CardCreationProps) {
     }
   };
 
-  // Get connection state
-  const userWallet = tonConnectUI.wallet;
-  const connected = !!userWallet;
-  const address = userWallet?.account?.address;
+  // Get connection state using recommended hooks
+  const connected = !!wallet;
 
   // Prepare mint transaction
   const prepareMint = async () => {
@@ -171,7 +171,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         .toString('base64');
 
       const transaction = {
-        validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutes
+        validUntil: Date.now() + 5 * 60 * 1000, // 5 minutes in milliseconds (official format)
         messages: [
           {
             address: mintInfo.collectionAddress,
