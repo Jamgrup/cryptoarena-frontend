@@ -32,8 +32,8 @@ export function CardCreation({ className = '' }: CardCreationProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Fetch collection info
-  const fetchCollectionInfo = async () => {
+  // Fetch collection info with retry logic
+  const fetchCollectionInfo = async (retryCount = 0) => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
       console.log('Fetching collection info from:', `${backendUrl}/api/v1/nft/collection/info`);
@@ -43,20 +43,46 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        // Add timeout
+        signal: AbortSignal.timeout(10000) // 10 second timeout
       });
       
       console.log('Collection response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
       console.log('Collection response data:', data);
       
       if (data.success) {
         setCollectionInfo(data.data);
+        setError(null); // Clear any previous errors
       } else {
-        setError('Failed to load collection info: ' + data.error);
+        throw new Error(data.error || 'Unknown backend error');
       }
-    } catch (err) {
-      setError('Error fetching collection info');
+    } catch (err: any) {
       console.error('Collection info error:', err);
+      
+      // Retry logic for network errors
+      if (retryCount < 2 && (err.name === 'AbortError' || err.message.includes('fetch'))) {
+        console.log(`Retrying collection info fetch... (attempt ${retryCount + 2}/3)`);
+        setTimeout(() => fetchCollectionInfo(retryCount + 1), 2000);
+        return;
+      }
+      
+      // Set user-friendly error message
+      let errorMessage = 'Failed to load collection info';
+      if (err.name === 'AbortError') {
+        errorMessage = 'Request timed out. Backend may be sleeping - please wait 30 seconds and try again.';
+      } else if (err.message.includes('500')) {
+        errorMessage = 'Backend server error. Please try again in a moment.';
+      } else if (err.message) {
+        errorMessage = `Failed to load collection info: ${err.message}`;
+      }
+      
+      setError(errorMessage);
     }
   };
 
@@ -161,8 +187,8 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         // Fallback: Create ton:// deep link with simple payload
         const tonAmount = toNano(mintInfo.mintValue).toString();
         
-        // Try simple comment-based transaction first
-        const simpleTonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${tonAmount}&text=mint`;
+        // Try simple comment-based transaction for testnet
+        const simpleTonLink = `https://app.tonkeeper.com/transfer/${mintInfo.collectionAddress}?amount=${tonAmount}&text=mint&testnet=true`;
         
         setSuccess(
           `⚠️ TON Connect timed out, using direct wallet method...\n\n` +
@@ -320,9 +346,9 @@ export function CardCreation({ className = '' }: CardCreationProps) {
             </button>
             <button
               onClick={() => {
-                const simpleTonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${toNano(mintInfo.mintValue).toString()}&text=mint`;
+                const simpleTonLink = `https://app.tonkeeper.com/transfer/${mintInfo.collectionAddress}?amount=${toNano(mintInfo.mintValue).toString()}&text=mint&testnet=true`;
                 window.open(simpleTonLink, '_blank');
-                setSuccess(`🔗 Opening simplified transaction in Tonkeeper...`);
+                setSuccess(`🔗 Opening testnet transaction in Tonkeeper...`);
               }}
               className="w-full px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors text-sm"
             >
