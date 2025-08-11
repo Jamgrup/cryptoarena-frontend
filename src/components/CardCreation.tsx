@@ -99,9 +99,13 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       setLoading(true);
       setError(null);
 
-      // Try direct backend call first, fallback to proxy
+      // Try direct backend call
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
-      const response = await fetch(`${backendUrl}/api/v1/nft/mint`, {
+      const mintUrl = `${backendUrl}/api/v1/nft/mint`;
+      console.log('Preparing mint for:', address);
+      console.log('Mint URL:', mintUrl);
+      
+      const response = await fetch(mintUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,18 +113,40 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         body: JSON.stringify({
           userAddress: address
         }),
+        // Add timeout
+        signal: AbortSignal.timeout(15000) // 15 second timeout
       });
 
+      console.log('Mint response status:', response.status);
+      console.log('Mint response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const data = await response.json();
+      console.log('Mint response data:', data);
       
       if (data.success) {
         setMintInfo(data.data);
       } else {
-        setError('Failed to prepare mint: ' + data.error);
+        setError('Failed to prepare mint: ' + (data.error || 'Unknown error'));
       }
-    } catch (err) {
-      setError('Error preparing mint transaction');
+    } catch (err: any) {
       console.error('Mint preparation error:', err);
+      
+      let errorMessage = 'Error preparing mint transaction';
+      if (err.name === 'AbortError') {
+        errorMessage = 'Mint request timed out. Backend may be sleeping - please wait 30 seconds and try again.';
+      } else if (err.message.includes('500')) {
+        errorMessage = 'Backend server error during mint preparation.';
+      } else if (err.message.includes('CORS')) {
+        errorMessage = 'Network access issue. Please try again.';
+      } else if (err.message) {
+        errorMessage = `Mint preparation failed: ${err.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
