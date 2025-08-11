@@ -144,7 +144,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         const result = await Promise.race([
           tonConnectUI.sendTransaction(transaction),
           timeoutPromise
-        ]);
+        ]) as any;
         
         if (result && result.boc) {
           setSuccess(`✅ Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
