@@ -35,7 +35,8 @@ export function CardCreation({ className = '' }: CardCreationProps) {
   // Fetch collection info
   const fetchCollectionInfo = async () => {
     try {
-      const response = await fetch('/api/nft/collection/info');
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
+      const response = await fetch(`${backendUrl}/api/v1/nft/collection/info`);
       const data = await response.json();
       
       if (data.success) {
@@ -62,7 +63,9 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/nft/mint', {
+      // Try direct backend call first, fallback to proxy
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
+      const response = await fetch(`${backendUrl}/api/v1/nft/mint`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
