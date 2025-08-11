@@ -214,7 +214,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         const tonAmount = toNano(mintInfo.mintValue).toString();
         
         // Try simple comment-based transaction for testnet
-        const simpleTonLink = `https://app.tonkeeper.com/transfer/${mintInfo.collectionAddress}?amount=${tonAmount}&text=mint&testnet=true`;
+        const simpleTonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${tonAmount}&text=mint`;
         
         setSuccess(
           `⚠️ TON Connect timed out, using direct wallet method...\n\n` +
@@ -372,9 +372,9 @@ export function CardCreation({ className = '' }: CardCreationProps) {
             </button>
             <button
               onClick={() => {
-                const simpleTonLink = `https://app.tonkeeper.com/transfer/${mintInfo.collectionAddress}?amount=${toNano(mintInfo.mintValue).toString()}&text=mint&testnet=true`;
+                const simpleTonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${toNano(mintInfo.mintValue).toString()}&text=mint`;
                 window.open(simpleTonLink, '_blank');
-                setSuccess(`🔗 Opening testnet transaction in Tonkeeper...`);
+                setSuccess(`🔗 Opening transaction in Tonkeeper...`);
               }}
               className="w-full px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors text-sm"
             >
