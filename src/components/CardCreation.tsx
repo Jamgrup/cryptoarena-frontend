@@ -36,8 +36,18 @@ export function CardCreation({ className = '' }: CardCreationProps) {
   const fetchCollectionInfo = async () => {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
-      const response = await fetch(`${backendUrl}/api/v1/nft/collection/info`);
+      console.log('Fetching collection info from:', `${backendUrl}/api/v1/nft/collection/info`);
+      
+      const response = await fetch(`${backendUrl}/api/v1/nft/collection/info`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Collection response status:', response.status);
       const data = await response.json();
+      console.log('Collection response data:', data);
       
       if (data.success) {
         setCollectionInfo(data.data);
