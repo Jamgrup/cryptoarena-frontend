@@ -261,7 +261,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">🎴 Create NFT Card</h3>
         <button
-          onClick={fetchCollectionInfo}
+          onClick={() => fetchCollectionInfo()}
           className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
           disabled={loading}
         >
