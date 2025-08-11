@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
 
+// Updated for FIXED Card Collection: EQDf6HH4A3x5N40KtE73FIfoeRnf5owyhzUfQhhBIrK3hl1G
+
 export async function GET() {
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/nft/collection/info`, {
