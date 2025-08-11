@@ -130,18 +130,41 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       };
 
       // Send transaction via TON Connect
-      await tonConnectUI.sendTransaction(transaction);
-
-      setSuccess(`Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
+      const result = await tonConnectUI.sendTransaction(transaction);
       
-      // Refresh collection info after successful mint
-      setTimeout(() => {
-        fetchCollectionInfo();
-      }, 5000);
+      if (result && result.boc) {
+        setSuccess(`Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
+        
+        // Clear mint info to reset state
+        setMintInfo(null);
+        
+        // Refresh collection info after successful mint
+        setTimeout(() => {
+          fetchCollectionInfo();
+        }, 5000);
+      } else {
+        throw new Error('Transaction was not confirmed');
+      }
 
-    } catch (err) {
-      setError('Failed to send mint transaction: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } catch (err: any) {
+      // Handle specific TON Connect errors
+      let errorMessage = 'Failed to send mint transaction';
+      
+      if (err?.message?.includes('User cancelled') || err?.message?.includes('User rejected')) {
+        errorMessage = 'Transaction cancelled by user';
+      } else if (err?.message?.includes('Timeout')) {
+        errorMessage = 'Transaction timed out. Please try again';
+      } else if (err?.message?.includes('Transaction was not sent')) {
+        errorMessage = 'Transaction failed. Please refresh and try again';
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
       console.error('Mint execution error:', err);
+      
+      // Reset mint info on error to allow retry
+      setMintInfo(null);
     } finally {
       setLoading(false);
     }
@@ -255,6 +278,19 @@ export function CardCreation({ className = '' }: CardCreationProps) {
             className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
           >
             Cancel
+          </button>
+        )}
+        
+        {error && (
+          <button
+            onClick={() => {
+              setError(null);
+              setMintInfo(null);
+              fetchCollectionInfo();
+            }}
+            className="w-full px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg transition-colors"
+          >
+            Retry Mint Process
           </button>
         )}
       </div>
