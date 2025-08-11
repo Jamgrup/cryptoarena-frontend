@@ -99,21 +99,17 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       setError(null);
       setSuccess(null);
 
-      // For testing - send to a known working address first
-      const isTestMode = true; // TODO: remove after fixing
+      // Production mode - mint actual NFT cards
+      const isTestMode = false; // Production NFT minting enabled
       
       let targetAddress = mintInfo.collectionAddress;
-      let amount = '0.1';
-      
-      if (isTestMode) {
-        // Send to our own address as test
-        targetAddress = address;
-        amount = '0.01'; // Very small test amount
-      }
+      let amount = mintInfo.mintValue; // Use backend-provided mint value
 
-      const commentPayload = beginCell()
-        .storeUint(0, 32) // text comment prefix
-        .storeStringTail(isTestMode ? 'test-mint' : 'mint')
+      // Create proper mint payload for Card Collection contract
+      const mintPayload = beginCell()
+        .storeUint(0x2001, 32) // op::mint_card operation
+        .storeUint(0, 64) // query_id
+        .storeAddress(Address.parse(address)) // recipient address
         .endCell()
         .toBoc()
         .toString('base64');
@@ -124,7 +120,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
           {
             address: targetAddress,
             amount: toNano(amount).toString(),
-            payload: commentPayload,
+            payload: mintPayload,
           },
         ],
       };
