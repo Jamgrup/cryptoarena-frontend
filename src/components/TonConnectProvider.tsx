@@ -11,6 +11,7 @@ export function TonConnectProvider({ children }: { children: React.ReactNode }) 
     <TonConnectUIProvider 
       manifestUrl={manifestUrl}
       uiPreferences={{ theme: THEME.DARK }}
+      bridgeUrl="https://bridge.tonapi.io/bridge"
     >
       {children}
     </TonConnectUIProvider>

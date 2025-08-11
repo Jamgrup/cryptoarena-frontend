@@ -129,54 +129,53 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         ],
       };
 
-      // TON Connect bridge часто недоступен (502 Bad Gateway)
-      // Используем ton:// fallback сразу для надежности
-      console.log('Bridge issues detected, using ton:// deep link directly');
-      
-      // Create ton:// deep link for direct wallet opening
-      const tonAmount = toNano(mintInfo.mintValue).toString();
-      const tonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${tonAmount}&bin=${mintPayload}`;
-      
-      setSuccess(
-        `🚀 Opening Tonkeeper wallet...\n\n` +
-        `💎 Minting Card #${mintInfo.nextItemIndex}\n` +
-        `💰 Cost: ${mintInfo.mintValue} TON\n\n` +
-        `If Tonkeeper doesn't open automatically:\n` +
-        `1. Copy this link: ${tonLink}\n` +
-        `2. Or manually send ${mintInfo.mintValue} TON to: ${mintInfo.collectionAddress}\n` +
-        `3. Use comment: "mint"`
-      );
-      
-      // Try to open the link
+      // Try TON Connect first with new bridge, fallback to ton:// link if needed
       try {
-        window.open(tonLink, '_blank');
-      } catch (linkError) {
-        console.warn('Failed to open ton:// link:', linkError);
-      }
-      
-      // Also try TON Connect as secondary option (with timeout)
-      try {
-        console.log('Also attempting TON Connect transaction as backup...');
-        const connectPromise = tonConnectUI.sendTransaction(transaction);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('TON Connect timeout')), 10000)
-        );
-        
-        const result = await Promise.race([connectPromise, timeoutPromise]);
+        console.log('Attempting TON Connect transaction with bridge.tonapi.io...');
+        const result = await tonConnectUI.sendTransaction(transaction);
         
         if (result && result.boc) {
-          setSuccess(`✅ TON Connect transaction confirmed! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
+          setSuccess(`✅ Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
+          setMintInfo(null);
+          
+          setTimeout(() => {
+            fetchCollectionInfo();
+          }, 5000);
+          return;
         }
       } catch (tonConnectError) {
-        console.warn('TON Connect backup failed (expected):', tonConnectError);
-        // This is expected due to bridge issues, ton:// link is primary method
+        console.warn('TON Connect failed, trying fallback:', tonConnectError);
+        
+        // Fallback: Create ton:// deep link
+        const tonAmount = toNano(mintInfo.mintValue).toString();
+        const tonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${tonAmount}&bin=${mintPayload}`;
+        
+        setSuccess(
+          `🚀 TON Connect failed, opening Tonkeeper directly...\n\n` +
+          `💎 Minting Card #${mintInfo.nextItemIndex}\n` +
+          `💰 Cost: ${mintInfo.mintValue} TON\n\n` +
+          `If Tonkeeper doesn't open automatically:\n` +
+          `1. Copy this link: ${tonLink}\n` +
+          `2. Or use the manual method below`
+        );
+        
+        // Try to open the link
+        try {
+          window.open(tonLink, '_blank');
+        } catch (linkError) {
+          console.warn('Failed to open ton:// link:', linkError);
+        }
+        
+        // Reset state after user has time to complete transaction
+        setTimeout(() => {
+          setMintInfo(null);
+          fetchCollectionInfo();
+        }, 15000);
+        
+        return;
       }
-      
-      // Reset state after user has time to complete transaction
-      setTimeout(() => {
-        setMintInfo(null);
-        fetchCollectionInfo();
-      }, 15000);
+
+      throw new Error('Transaction was not confirmed');
 
     } catch (err: any) {
       // Handle errors
