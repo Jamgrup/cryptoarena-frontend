@@ -129,10 +129,22 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         ],
       };
 
-      // Try TON Connect first with new bridge, fallback to ton:// link if needed
+      // Try TON Connect with timeout to avoid hanging
       try {
-        console.log('Attempting TON Connect transaction with bridge.tonapi.io...');
-        const result = await tonConnectUI.sendTransaction(transaction);
+        console.log('Attempting TON Connect transaction with timeout...');
+        
+        // Create timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('TON Connect transaction timeout after 20 seconds'));
+          }, 20000); // 20 second timeout
+        });
+        
+        // Race between transaction and timeout
+        const result = await Promise.race([
+          tonConnectUI.sendTransaction(transaction),
+          timeoutPromise
+        ]);
         
         if (result && result.boc) {
           setSuccess(`✅ Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
@@ -144,24 +156,26 @@ export function CardCreation({ className = '' }: CardCreationProps) {
           return;
         }
       } catch (tonConnectError) {
-        console.warn('TON Connect failed, trying fallback:', tonConnectError);
+        console.warn('TON Connect failed (timeout or error), using fallback:', tonConnectError);
         
-        // Fallback: Create ton:// deep link
+        // Fallback: Create ton:// deep link with simple payload
         const tonAmount = toNano(mintInfo.mintValue).toString();
-        const tonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${tonAmount}&bin=${mintPayload}`;
+        
+        // Try simple comment-based transaction first
+        const simpleTonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${tonAmount}&text=mint`;
         
         setSuccess(
-          `🚀 TON Connect failed, opening Tonkeeper directly...\n\n` +
+          `⚠️ TON Connect timed out, using direct wallet method...\n\n` +
           `💎 Minting Card #${mintInfo.nextItemIndex}\n` +
           `💰 Cost: ${mintInfo.mintValue} TON\n\n` +
-          `If Tonkeeper doesn't open automatically:\n` +
-          `1. Copy this link: ${tonLink}\n` +
-          `2. Or use the manual method below`
+          `🔗 Opening Tonkeeper with simplified transaction...\n` +
+          `If it doesn't work, use manual method below.`
         );
         
-        // Try to open the link
+        // Try to open the simplified link
         try {
-          window.open(tonLink, '_blank');
+          window.open(simpleTonLink, '_blank');
+          console.log('Opening simplified ton:// link:', simpleTonLink);
         } catch (linkError) {
           console.warn('Failed to open ton:// link:', linkError);
         }
@@ -170,7 +184,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         setTimeout(() => {
           setMintInfo(null);
           fetchCollectionInfo();
-        }, 15000);
+        }, 20000);
         
         return;
       }
@@ -297,12 +311,24 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         )}
 
         {mintInfo && (
-          <button
-            onClick={() => setMintInfo(null)}
-            className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => setMintInfo(null)}
+              className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                const simpleTonLink = `ton://transfer/${mintInfo.collectionAddress}?amount=${toNano(mintInfo.mintValue).toString()}&text=mint`;
+                window.open(simpleTonLink, '_blank');
+                setSuccess(`🔗 Opening simplified transaction in Tonkeeper...`);
+              }}
+              className="w-full px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors text-sm"
+            >
+              🚀 Try Direct Link (if hanging)
+            </button>
+          </div>
         )}
         
         {error && (
