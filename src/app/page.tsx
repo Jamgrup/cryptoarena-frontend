@@ -5,6 +5,7 @@ import { WalletConnector } from '@/components/WalletConnector'
 import { NFTCardCreator } from '@/components/NFTCardCreator'
 import { WaveDisplay } from '@/components/WaveDisplay'
 import { GemBalance } from '@/components/GemBalance'
+import { CardCreation } from '@/components/CardCreation'
 
 export default function Home() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
@@ -29,6 +30,7 @@ export default function Home() {
           {isWalletConnected && (
             <>
               <GemBalance />
+              <CardCreation className="mb-8" />
               <WaveDisplay />
               <NFTCardCreator />
             </>
