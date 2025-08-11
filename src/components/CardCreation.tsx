@@ -96,10 +96,21 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       setError(null);
       setSuccess(null);
 
-      // Try with minimal payload - just a comment
+      // For testing - send to a known working address first
+      const isTestMode = true; // TODO: remove after fixing
+      
+      let targetAddress = mintInfo.collectionAddress;
+      let amount = '0.1';
+      
+      if (isTestMode) {
+        // Send to our own address as test
+        targetAddress = address;
+        amount = '0.01'; // Very small test amount
+      }
+
       const commentPayload = beginCell()
         .storeUint(0, 32) // text comment prefix
-        .storeStringTail('mint')
+        .storeStringTail(isTestMode ? 'test-mint' : 'mint')
         .endCell()
         .toBoc()
         .toString('base64');
@@ -108,8 +119,8 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutes
         messages: [
           {
-            address: mintInfo.collectionAddress,
-            amount: toNano('0.1').toString(), // Reduced gas
+            address: targetAddress,
+            amount: toNano(amount).toString(),
             payload: commentPayload,
           },
         ],
