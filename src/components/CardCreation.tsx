@@ -96,23 +96,21 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       setError(null);
       setSuccess(null);
 
-      // Prepare mint payload (op::mint_card = 0x2001)
-      const mintPayload = beginCell()
-        .storeUint(0x2001, 32) // op::mint_card
-        .storeUint(0, 64) // query_id
-        .storeAddress(Address.parse(address)) // recipient
+      // Try with minimal payload - just a comment
+      const commentPayload = beginCell()
+        .storeUint(0, 32) // text comment prefix
+        .storeStringTail('mint')
         .endCell()
         .toBoc()
         .toString('base64');
 
-      // Prepare transaction
       const transaction = {
         validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutes
         messages: [
           {
             address: mintInfo.collectionAddress,
-            amount: toNano(mintInfo.mintValue).toString(),
-            payload: mintPayload,
+            amount: toNano('0.1').toString(), // Reduced gas
+            payload: commentPayload,
           },
         ],
       };
