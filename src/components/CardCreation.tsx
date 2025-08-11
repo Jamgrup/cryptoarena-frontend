@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTonConnect } from '@/hooks/useTonConnect';
+import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Address, toNano } from '@ton/core';
 
 interface CardCreationProps {
@@ -25,7 +25,7 @@ interface MintInfo {
 }
 
 export function CardCreation({ className = '' }: CardCreationProps) {
-  const { connected, address, sender } = useTonConnect();
+  const [tonConnectUI] = useTonConnectUI();
   const [collectionInfo, setCollectionInfo] = useState<CollectionInfo | null>(null);
   const [mintInfo, setMintInfo] = useState<MintInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,6 +48,11 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       console.error('Collection info error:', err);
     }
   };
+
+  // Get connection state
+  const userWallet = tonConnectUI.wallet;
+  const connected = !!userWallet;
+  const address = userWallet?.account?.address;
 
   // Prepare mint transaction
   const prepareMint = async () => {
@@ -84,7 +89,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
 
   // Execute mint transaction
   const executeMint = async () => {
-    if (!sender || !mintInfo || !address) return;
+    if (!tonConnectUI || !mintInfo || !address) return;
 
     try {
       setLoading(true);
@@ -104,7 +109,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       };
 
       // Send transaction via TON Connect
-      await sender.send(transaction);
+      await tonConnectUI.sendTransaction(transaction);
 
       setSuccess(`Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
       
