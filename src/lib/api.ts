@@ -21,6 +21,26 @@ export interface NFTCardData {
   wave: 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple'
 }
 
+export interface GemTokenInfo {
+  address: string
+  name: string
+  symbol: string
+  decimals: number
+  totalSupply: string
+  mintable: boolean
+  adminAddress: string
+  state: string
+  balance: string
+}
+
+export interface GemBalance {
+  userAddress: string
+  walletAddress: string
+  balance: string
+  decimals: number
+  formatted: string
+}
+
 class ApiClient {
   private async fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 10000) {
     const controller = new AbortController()
@@ -93,6 +113,63 @@ class ApiClient {
       health: baseStats.health + Math.floor(Math.random() * 50),
       speed: baseStats.speed + Math.floor(Math.random() * 5),
       wave: waves[Math.floor(Math.random() * waves.length)]
+    }
+  }
+
+  // GEM Token Methods
+  async getGemTokenInfo(): Promise<GemTokenInfo> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/gem/info`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get GEM token info:', error)
+      throw new Error('Failed to load GEM token information')
+    }
+  }
+
+  async getGemBalance(userAddress: string): Promise<GemBalance> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/gem/balance/${userAddress}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get GEM balance:', error)
+      throw new Error('Failed to load GEM balance')
+    }
+  }
+
+  async getGemWallet(userAddress: string): Promise<{ userAddress: string; walletAddress: string; balance: string; decimals: number }> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/gem/wallet/${userAddress}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get GEM wallet:', error)
+      throw new Error('Failed to load GEM wallet')
+    }
+  }
+
+  async getTestnetInfo(): Promise<any> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/gem/testnet-info`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get testnet info:', error)
+      throw new Error('Failed to load testnet information')
     }
   }
 }

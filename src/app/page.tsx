@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { WalletConnector } from '@/components/WalletConnector'
 import { NFTCardCreator } from '@/components/NFTCardCreator'
 import { WaveDisplay } from '@/components/WaveDisplay'
+import { GemBalance } from '@/components/GemBalance'
 
 export default function Home() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
@@ -27,6 +28,7 @@ export default function Home() {
 
           {isWalletConnected && (
             <>
+              <GemBalance />
               <WaveDisplay />
               <NFTCardCreator />
             </>
