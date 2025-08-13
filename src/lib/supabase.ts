@@ -18,7 +18,7 @@ export function getImageUrl(path: string): string {
 }
 
 /**
- * Получить URL изображения волны (wave)
+ * Получить URL изображения волны (wave) - размер 36x36px
  */
 export function getWaveImageUrl(waveName: string): string {
   const waveFileNames: {[key: string]: string} = {

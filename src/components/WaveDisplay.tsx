@@ -35,7 +35,7 @@ export function WaveDisplay() {
               <div className={`text-2xl mb-2 ${wave.color} font-bold`}>
                 {wave.name.toUpperCase()}
               </div>
-              <div className="w-12 h-12 mx-auto relative">
+              <div className="w-9 h-9 mx-auto relative">
                 <div className={`w-full h-full rounded-full ${wave.bgColor} border border-current ${wave.color}`} />
               </div>
             </div>
