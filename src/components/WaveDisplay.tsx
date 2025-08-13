@@ -1,23 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
+import { getWaveImageUrl } from '@/lib/supabase'
 
 const waves = [
-  { name: 'red', color: 'text-red-500', bgColor: 'bg-red-900/20' },
-  { name: 'orange', color: 'text-orange-500', bgColor: 'bg-orange-900/20' },
-  { name: 'yellow', color: 'text-yellow-500', bgColor: 'bg-yellow-900/20' },
-  { name: 'green', color: 'text-green-500', bgColor: 'bg-green-900/20' },
-  { name: 'blue', color: 'text-blue-500', bgColor: 'bg-blue-900/20' },
-  { name: 'purple', color: 'text-purple-500', bgColor: 'bg-purple-900/20' }
+  { name: 'red', color: 'text-red-500', bgColor: 'bg-red-900/20', fileName: 'Color=RED.png' },
+  { name: 'orange', color: 'text-orange-500', bgColor: 'bg-orange-900/20', fileName: 'Color=Orange.png' },
+  { name: 'yellow', color: 'text-yellow-500', bgColor: 'bg-yellow-900/20', fileName: 'Color=Yellow.png' },
+  { name: 'green', color: 'text-green-500', bgColor: 'bg-green-900/20', fileName: 'Color=Green.png' },
+  { name: 'blue', color: 'text-blue-500', bgColor: 'bg-blue-900/20', fileName: 'Color=Blue.png' },
+  { name: 'pink', color: 'text-pink-500', bgColor: 'bg-pink-900/20', fileName: 'Color=Pink.png' }
 ]
 
 export function WaveDisplay() {
   const [selectedWave, setSelectedWave] = useState<string>('red')
-
-  const getWaveImageUrl = (waveName: string) => {
-    return `https://aahhwipuqqttfcqkdqdb.supabase.co/storage/v1/object/public/nft-images/wave_${waveName}.svg`
-  }
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
@@ -58,10 +55,7 @@ export function WaveDisplay() {
               alt={`${selectedWave} wave`}
               fill
               className="object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.src = '/placeholder-wave.svg'
-              }}
+              unoptimized // Для внешних изображений из Supabase
             />
           </div>
           

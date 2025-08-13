@@ -12,13 +12,24 @@ export interface CardMetadata {
 }
 
 export interface NFTCardData {
-  type: 'warrior' | 'mage' | 'archer' | 'tank'
-  rarity: 'common' | 'rare' | 'epic' | 'legendary'
-  attack: number
-  defense: number
-  health: number
-  speed: number
+  // Правильные характеристики из GDD v3
+  physical_damage: number  // 1-100
+  magic_damage: number     // 1-100
+  attack_speed: number     // 1-50
+  accuracy: number         // 0-100
+  evasion: number         // 0-100
+  physical_armor: number   // 0-50
+  magic_armor: number      // 0-50
+  crit_chance: number      // 0-25
+  level: number           // 1-10
   wave: 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple'
+  rarity: 'common' | 'rare' | 'epic' | 'legendary'
+  
+  // Поля для программы/героя
+  name?: string
+  title?: string
+  description?: string
+  lore?: string
 }
 
 export interface GemTokenInfo {
@@ -86,33 +97,62 @@ class ApiClient {
   }
 
   async generateRandomCard(): Promise<NFTCardData> {
-    const types: NFTCardData['type'][] = ['warrior', 'mage', 'archer', 'tank']
     const rarities: NFTCardData['rarity'][] = ['common', 'rare', 'epic', 'legendary']
     const waves: NFTCardData['wave'][] = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
     
     const rarity = rarities[Math.floor(Math.random() * rarities.length)]
+    const wave = waves[Math.floor(Math.random() * waves.length)]
+    const level = 1 // Новые карты всегда уровня 1
     
-    let baseStats = { attack: 10, defense: 10, health: 100, speed: 5 }
+    // Генерация характеристик согласно GDD v3
+    // Базовые значения зависят от редкости
+    let baseMultiplier = 1
     switch (rarity) {
       case 'rare':
-        baseStats = { attack: 15, defense: 15, health: 150, speed: 7 }
+        baseMultiplier = 1.5
         break
       case 'epic':
-        baseStats = { attack: 25, defense: 25, health: 250, speed: 10 }
+        baseMultiplier = 2.5
         break
       case 'legendary':
-        baseStats = { attack: 40, defense: 40, health: 400, speed: 15 }
+        baseMultiplier = 4
         break
     }
     
+    // Генерируем характеристики в указанных диапазонах
+    const physical_damage = Math.floor((10 + Math.random() * 40) * baseMultiplier) // 1-100
+    const magic_damage = Math.floor((10 + Math.random() * 40) * baseMultiplier)    // 1-100
+    const attack_speed = Math.floor((5 + Math.random() * 20) * Math.min(baseMultiplier, 2)) // 1-50
+    const accuracy = Math.floor(30 + Math.random() * 50)        // 0-100
+    const evasion = Math.floor(10 + Math.random() * 40)         // 0-100
+    const physical_armor = Math.floor((5 + Math.random() * 20) * Math.min(baseMultiplier, 2)) // 0-50
+    const magic_armor = Math.floor((5 + Math.random() * 20) * Math.min(baseMultiplier, 2))    // 0-50
+    const crit_chance = Math.floor((2 + Math.random() * 8) * Math.min(baseMultiplier, 2))     // 0-25
+    
+    const cardStats = {
+      physical_damage,
+      magic_damage,
+      attack_speed,
+      accuracy,
+      evasion,
+      physical_armor,
+      magic_armor,
+      crit_chance,
+      level,
+      wave
+    }
+    
+    // Динамический импорт героев
+    const { generateHeroData } = await import('@/lib/heroes')
+    const heroData = generateHeroData(cardStats, rarity, wave)
+    
     return {
-      type: types[Math.floor(Math.random() * types.length)],
+      ...cardStats,
       rarity,
-      attack: baseStats.attack + Math.floor(Math.random() * 10),
-      defense: baseStats.defense + Math.floor(Math.random() * 10),
-      health: baseStats.health + Math.floor(Math.random() * 50),
-      speed: baseStats.speed + Math.floor(Math.random() * 5),
-      wave: waves[Math.floor(Math.random() * waves.length)]
+      name: heroData.name,
+      title: heroData.title,
+      description: heroData.description,
+      lore: heroData.lore
     }
   }
 
