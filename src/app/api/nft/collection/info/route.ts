@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
 
-// Updated for FINAL Card Collection: EQAzl-kOACDlC3Zp5yxGicc7v585vos7FtQn8XDe20MHSO_8 (ALL FIXES)
+// Updated for FINAL Card Collection: EQCQYUDGZBPaOjx_wqjyypzZRwemNT0l2Ebcg--EE3lwa4oF (v3.0 - ALL CRITICAL FIXES)
 
 export async function GET() {
   try {
