@@ -212,6 +212,97 @@ class ApiClient {
       throw new Error('Failed to load testnet information')
     }
   }
+
+  // NFT Card Methods
+  async getCollectionInfo(): Promise<any> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/nft/collection/info`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get collection info:', error)
+      throw new Error('Failed to load collection information')
+    }
+  }
+
+  async getCollectionCards(limit: number = 12, offset: number = 0): Promise<any> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/nft/collection/cards?limit=${limit}&offset=${offset}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get collection cards:', error)
+      throw new Error('Failed to load NFT cards')
+    }
+  }
+
+  async getCardMetadataWithSupabase(cardIndex: number): Promise<any> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/nft/card/${cardIndex}/metadata`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get card metadata:', error)
+      throw new Error('Failed to load card metadata')
+    }
+  }
+
+  async getCard(cardIndex: number): Promise<any> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/nft/card/${cardIndex}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get card:', error)
+      throw new Error('Failed to load card information')
+    }
+  }
+
+  async prepareMint(userAddress: string): Promise<any> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/nft/mint`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userAddress })
+      })
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to prepare mint:', error)
+      throw new Error('Failed to prepare mint transaction')
+    }
+  }
+
+  async getNFTTestnetInfo(): Promise<any> {
+    try {
+      const response = await this.fetchWithTimeout(`${API_BASE_URL}/api/v1/nft/testnet-info`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      return data.data
+    } catch (error) {
+      console.error('Failed to get NFT testnet info:', error)
+      throw new Error('Failed to load NFT testnet information')
+    }
+  }
 }
 
 export const apiClient = new ApiClient()

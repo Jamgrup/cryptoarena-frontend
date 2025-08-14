@@ -6,6 +6,7 @@ import { NFTCardCreator } from '@/components/NFTCardCreator'
 import { WaveDisplay } from '@/components/WaveDisplay'
 import { GemBalance } from '@/components/GemBalance'
 import { CardCreation } from '@/components/CardCreation'
+import { NFTCardGallery } from '@/components/NFTCardGallery'
 
 export default function Home() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
@@ -31,6 +32,7 @@ export default function Home() {
             <>
               <GemBalance />
               <CardCreation className="mb-8" />
+              <NFTCardGallery className="mb-8" />
               <WaveDisplay />
               <NFTCardCreator />
             </>
