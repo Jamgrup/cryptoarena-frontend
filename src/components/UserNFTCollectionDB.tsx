@@ -44,9 +44,19 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
   const [error, setError] = useState<string | null>(null);
   const [selectedCard, setSelectedCard] = useState<NFTCard | null>(null);
 
+  // Debug logging for address changes
+  useEffect(() => {
+    console.log('UserNFTCollectionDB address changed:', {
+      address,
+      type: typeof address,
+      length: address?.length,
+      isEmpty: !address || address.trim() === ''
+    });
+  }, [address]);
+
   // Sync blockchain data with database
   const syncWithBlockchain = async () => {
-    if (!address) return;
+    if (!address || address.trim() === '') return;
 
     try {
       console.log('Syncing blockchain data with database...');
@@ -90,7 +100,7 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
 
   // Fetch user's NFT cards from database only
   const fetchUserCards = async () => {
-    if (!address) {
+    if (!address || address.trim() === '') {
       setCards([]);
       return;
     }
@@ -147,7 +157,7 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
 
   // Real-time subscription to cards changes
   useEffect(() => {
-    if (!address) return;
+    if (!address || address.trim() === '') return;
 
     const subscription = supabaseHelpers.subscribeToUserCards(address, (payload) => {
       console.log('Cards changed:', payload);
@@ -160,7 +170,7 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
     };
   }, [address]);
 
-  if (!address) {
+  if (!address || address.trim() === '') {
     return (
       <div className={`p-6 bg-gray-50 border border-gray-200 rounded-lg ${className}`}>
         <div className="text-center">

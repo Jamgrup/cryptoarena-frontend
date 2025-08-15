@@ -136,6 +136,12 @@ export const supabaseHelpers = {
   // Get user's NFT cards from backend API
   async getUserCards(walletAddress: string): Promise<Card[]> {
     try {
+      // Validate wallet address
+      if (!walletAddress || walletAddress.trim() === '') {
+        console.warn('getUserCards called with empty wallet address');
+        return [];
+      }
+
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
       console.log(`Fetching cards for wallet: ${walletAddress} from ${backendUrl}`);
       
@@ -174,6 +180,12 @@ export const supabaseHelpers = {
   // Get user profile from backend API (avoiding RLS issues)
   async getUserProfile(walletAddress: string): Promise<User | null> {
     try {
+      // Validate wallet address
+      if (!walletAddress || walletAddress.trim() === '') {
+        console.warn('getUserProfile called with empty wallet address');
+        return null;
+      }
+
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
       console.log(`Fetching profile for wallet: ${walletAddress} from ${backendUrl}`);
       
@@ -219,6 +231,12 @@ export const supabaseHelpers = {
     avatar_url?: string;
   }): Promise<User | null> {
     try {
+      // Validate wallet address
+      if (!profileData.wallet_address || profileData.wallet_address.trim() === '') {
+        console.warn('createOrUpdateUserProfile called with empty wallet address');
+        return null;
+      }
+
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
       console.log(`Saving profile for wallet: ${profileData.wallet_address}`, profileData);
       
