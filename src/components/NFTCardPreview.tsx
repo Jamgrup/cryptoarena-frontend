@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { generateHeroData, getWaveColor } from '@/lib/heroes';
-import { getWaveImageUrl, getRandomCardImageUrl } from '@/lib/supabase';
+import { getWaveColor } from '@/lib/heroes';
+import { getWaveImageUrl, getRandomCardPreview } from '@/lib/supabase';
 
 type WaveType = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple';
 
@@ -10,6 +10,9 @@ interface GeneratedCardMetadata {
   name: string;
   description: string;
   lore: string;
+  rarity: string;
+  powerRating: number;
+  dominantStat: string;
   imageUrl: string;
   waveImageUrl: string;
 }
@@ -29,42 +32,50 @@ export function NFTCardPreview({ onPreviewGenerated, className = '' }: NFTCardPr
     try {
       setLoading(true);
 
-      // All data is random - wave, characteristics, rarity
-      const randomWave: WaveType = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'][
-        Math.floor(Math.random() * 6)
-      ] as WaveType;
+      // Получаем полные данные карты от backend API
+      const backendPreview = await getRandomCardPreview();
+      
+      if (backendPreview) {
+        // Извлекаем wave из описания или определяем случайно
+        const waveMatch = backendPreview.description.match(/(red|orange|yellow|green|blue|purple) wave/i);
+        const currentWaveValue: WaveType = waveMatch ? waveMatch[1].toLowerCase() as WaveType : 
+          ['red', 'orange', 'yellow', 'green', 'blue', 'purple'][Math.floor(Math.random() * 6)] as WaveType;
 
-      // Mock attributes for name generation only (real stats generated in contract)
-      const mockAttributes = {
-        wave: randomWave,
-        level: Math.floor(Math.random() * 10) + 1,
-        physical_damage: Math.floor(Math.random() * 100) + 1,
-        magic_damage: Math.floor(Math.random() * 100) + 1,
-        physical_armor: Math.floor(Math.random() * 50),
-        magic_armor: Math.floor(Math.random() * 50),
-        attack_speed: Math.floor(Math.random() * 50) + 1,
-        accuracy: Math.floor(Math.random() * 100),
-        evasion: Math.floor(Math.random() * 100),
-        crit_chance: Math.floor(Math.random() * 25)
-      };
+        const previewMetadata: GeneratedCardMetadata = {
+          name: backendPreview.name,
+          description: backendPreview.description,
+          lore: backendPreview.lore,
+          rarity: backendPreview.rarity,
+          powerRating: backendPreview.powerRating,
+          dominantStat: backendPreview.dominantStat,
+          imageUrl: backendPreview.imageUrl,
+          waveImageUrl: getWaveImageUrl(currentWaveValue)
+        };
+        
+        setCurrentWave(currentWaveValue);
+        setMetadata(previewMetadata);
+        onPreviewGenerated?.(currentWaveValue, previewMetadata);
+      } else {
+        // Fallback к случайным данным если backend не работает
+        const randomWave: WaveType = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'][
+          Math.floor(Math.random() * 6)
+        ] as WaveType;
 
-      // Random rarity for preview
-      const randomRarity: 'common' | 'rare' | 'epic' | 'legendary' = 
-        ['common', 'rare', 'epic', 'legendary'][Math.floor(Math.random() * 4)] as any;
-      
-      const heroData = generateHeroData(mockAttributes, randomRarity, randomWave);
-      
-      const previewMetadata: GeneratedCardMetadata = {
-        name: heroData.name,
-        description: heroData.description,
-        lore: heroData.lore,
-        imageUrl: getRandomCardImageUrl(),
-        waveImageUrl: getWaveImageUrl(randomWave)
-      };
-      
-      setCurrentWave(randomWave);
-      setMetadata(previewMetadata);
-      onPreviewGenerated?.(randomWave, previewMetadata);
+        const fallbackMetadata: GeneratedCardMetadata = {
+          name: 'Random Card',
+          description: 'Backend API unavailable. Real characteristics will be generated in smart contract.',
+          lore: 'Preview data unavailable.',
+          rarity: 'common',
+          powerRating: 0,
+          dominantStat: 'unknown',
+          imageUrl: '/placeholder-card.svg',
+          waveImageUrl: getWaveImageUrl(randomWave)
+        };
+        
+        setCurrentWave(randomWave);
+        setMetadata(fallbackMetadata);
+        onPreviewGenerated?.(randomWave, fallbackMetadata);
+      }
     } catch (error) {
       console.error('Preview generation failed:', error);
     } finally {
@@ -140,6 +151,23 @@ export function NFTCardPreview({ onPreviewGenerated, className = '' }: NFTCardPr
           {/* Card Info */}
           <div className="space-y-3 text-center">
             <h4 className="font-bold text-xl text-gray-900">{metadata.name}</h4>
+            
+            {/* Rarity and Power Rating */}
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <span className={`px-2 py-1 rounded font-medium ${
+                metadata.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-800' :
+                metadata.rarity === 'epic' ? 'bg-purple-100 text-purple-800' :
+                metadata.rarity === 'rare' ? 'bg-blue-100 text-blue-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {metadata.rarity.toUpperCase()}
+              </span>
+              {metadata.powerRating > 0 && (
+                <span className="px-2 py-1 bg-green-100 text-green-800 rounded font-medium">
+                  Power: {metadata.powerRating}
+                </span>
+              )}
+            </div>
             
             <p className="text-sm text-gray-700 leading-relaxed max-w-lg mx-auto">
               {metadata.description}

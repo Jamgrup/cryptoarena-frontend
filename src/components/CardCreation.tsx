@@ -31,6 +31,9 @@ interface GeneratedCardMetadata {
   name: string;
   description: string;
   lore: string;
+  rarity: string;
+  powerRating: number;
+  dominantStat: string;
   imageUrl: string;
   waveImageUrl: string;
 }
@@ -460,6 +463,21 @@ export function CardCreation({ className = '' }: CardCreationProps) {
             />
             <div className="space-y-1 text-sm text-purple-800 flex-1">
               <p><span className="font-medium">Name:</span> {previewMetadata.name}</p>
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 text-xs rounded font-medium ${
+                  previewMetadata.rarity === 'legendary' ? 'bg-yellow-100 text-yellow-700' :
+                  previewMetadata.rarity === 'epic' ? 'bg-purple-100 text-purple-700' :
+                  previewMetadata.rarity === 'rare' ? 'bg-blue-100 text-blue-700' :
+                  'bg-gray-100 text-gray-700'
+                }`}>
+                  {previewMetadata.rarity?.toUpperCase() || 'UNKNOWN'}
+                </span>
+                {previewMetadata.powerRating > 0 && (
+                  <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded font-medium">
+                    Power: {previewMetadata.powerRating}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-purple-600 italic">Preview only - real stats generated in contract</p>
               {previewWave && (
                 <p><span className="font-medium">Wave:</span> {previewWave}</p>

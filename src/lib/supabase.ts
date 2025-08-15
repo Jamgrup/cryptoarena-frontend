@@ -117,7 +117,60 @@ export function getRandomCardImageUrl(): string {
   const randomType = cardTypes[Math.floor(Math.random() * cardTypes.length)];
   const randomRarity = rarities[Math.floor(Math.random() * rarities.length)];
   
-  return getImageUrl(`cards/${randomType}_${randomRarity}.svg`);
+  // Fallback к placeholder если изображения нет
+  return getPlaceholderImage('card');
+}
+
+/**
+ * Получить полные данные карты для предпросмотра через backend API
+ */
+export async function getRandomCardPreview(): Promise<{
+  name: string;
+  description: string;
+  lore: string;
+  rarity: string;
+  powerRating: number;
+  dominantStat: string;
+  imageUrl: string;
+} | null> {
+  try {
+    // Создаем рандомные атрибуты для preview API
+    const randomAttributes = {
+      wave: ['red', 'orange', 'yellow', 'green', 'blue', 'purple'][Math.floor(Math.random() * 6)],
+      level: Math.floor(Math.random() * 10) + 1,
+      physical_damage: Math.floor(Math.random() * 100) + 1,
+      magic_damage: Math.floor(Math.random() * 100) + 1,
+      physical_armor: Math.floor(Math.random() * 50),
+      magic_armor: Math.floor(Math.random() * 50),
+      attack_speed: Math.floor(Math.random() * 50) + 1,
+      accuracy: Math.floor(Math.random() * 100),
+      evasion: Math.floor(Math.random() * 100),
+      crit_chance: Math.floor(Math.random() * 25)
+    };
+
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
+    const response = await fetch(`${backendUrl}/api/v1/nft/preview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ attributes: randomAttributes }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Backend preview API failed');
+    }
+
+    const data = await response.json();
+    if (data.success) {
+      return data.data.metadata;
+    } else {
+      throw new Error(data.error || 'Preview generation failed');
+    }
+  } catch (error) {
+    console.error('Error getting random card preview:', error);
+    return null;
+  }
 }
 
 /**
