@@ -3,19 +3,18 @@
 import { useState } from 'react'
 import { useTonAddress } from '@tonconnect/ui-react'
 import { WalletConnector } from '@/components/WalletConnector'
-import { NFTCardCreator } from '@/components/NFTCardCreator'
+import { NFTMintCard } from '@/components/NFTMintCard'
 import { WaveDisplay } from '@/components/WaveDisplay'
 import { GemBalance } from '@/components/GemBalance'
-import { CardCreation } from '@/components/CardCreation'
 import { NFTCardGallery } from '@/components/NFTCardGallery'
 import { SupabaseCardGallery } from '@/components/SupabaseCardGallery'
-import { UserNFTCollection } from '@/components/UserNFTCollection'
-import { UserProfile } from '@/components/UserProfile'
+import { UserNFTCollectionDB } from '@/components/UserNFTCollectionDB'
+import { UserProfileDB } from '@/components/UserProfileDB'
 import { ContractInfo } from '@/components/ContractInfo'
 
 export default function Home() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
-  const [activeTab, setActiveTab] = useState<'my-cards' | 'blockchain' | 'supabase'>('my-cards')
+  const [activeTab, setActiveTab] = useState<'my-cards' | 'all-cards'>('my-cards')
   const address = useTonAddress()
 
   return (
@@ -42,11 +41,11 @@ export default function Home() {
                   <GemBalance />
                 </div>
                 <div>
-                  <UserProfile />
+                  <UserProfileDB />
                 </div>
               </div>
 
-              <CardCreation className="mb-8" />
+              <NFTMintCard />
 
               {/* Gallery Tabs */}
               <div className="mb-8">
@@ -59,41 +58,27 @@ export default function Home() {
                         : 'text-white hover:text-gray-300'
                     }`}
                   >
-                    🎴 My Cards
+                    🎴 My NFT Cards
                   </button>
                   <button
-                    onClick={() => setActiveTab('blockchain')}
+                    onClick={() => setActiveTab('all-cards')}
                     className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                      activeTab === 'blockchain'
+                      activeTab === 'all-cards'
                         ? 'bg-white text-gray-900'
                         : 'text-white hover:text-gray-300'
                     }`}
                   >
-                    📡 Collection
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('supabase')}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                      activeTab === 'supabase'
-                        ? 'bg-white text-gray-900'
-                        : 'text-white hover:text-gray-300'
-                    }`}
-                  >
-                    🗄️ Database
+                    🗄️ All Cards
                   </button>
                 </div>
 
                 {activeTab === 'my-cards' ? (
-                  <UserNFTCollection />
-                ) : activeTab === 'blockchain' ? (
-                  <NFTCardGallery />
+                  <UserNFTCollectionDB />
                 ) : (
-                  <SupabaseCardGallery walletAddress={address} />
+                  <SupabaseCardGallery />
                 )}
               </div>
 
-              <WaveDisplay />
-              <NFTCardCreator />
               <ContractInfo className="mt-8" />
             </>
           )}
