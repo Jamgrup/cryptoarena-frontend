@@ -79,6 +79,41 @@ export interface CardInstance {
   updated_at: string;
 }
 
+// Card template interface for mint options
+export interface CardTemplate {
+  id: string;
+  name: string;
+  description: string;
+  wave: string;
+  rarity: string;
+  base_stats: {
+    physical_damage: number;
+    magic_damage: number;
+    physical_armor: number;
+    magic_armor: number;
+    attack_speed: number;
+    accuracy: number;
+    evasion: number;
+    crit_chance: number;
+  };
+  created_at: string;
+}
+
+// User profile interface
+export interface UserProfile {
+  id: string;
+  wallet_address: string;
+  username?: string;
+  avatar_url?: string;
+  cards_owned: number;
+  gems_balance: string;
+  level: number;
+  experience: number;
+  created_at: string;
+  updated_at: string;
+  last_login: string;
+}
+
 export interface Transaction {
   id: string;
   hash: string;
@@ -281,6 +316,188 @@ export const supabaseHelpers = {
         callback
       )
       .subscribe();
+  },
+
+  // Get card instances (for legacy compatibility)
+  async getCardInstances(filters?: { 
+    owner?: string; 
+    limit?: number; 
+    offset?: number;
+  }): Promise<CardInstance[]> {
+    try {
+      const userCards = await this.getUserCards(filters?.owner || '');
+      
+      // Transform Card[] to CardInstance[] format
+      return userCards.map(card => ({
+        id: card.id,
+        card_index: parseInt(card.card_id.slice(-3)) || 0, // Extract index from card_id
+        nft_address: card.card_id,
+        owner_address: card.owner_address,
+        name: card.metadata.name,
+        description: card.metadata.description,
+        lore: card.metadata.lore,
+        rarity: card.metadata.rarity,
+        wave: card.metadata.attributes.wave,
+        physical_damage: card.metadata.attributes.physical_damage,
+        magic_damage: card.metadata.attributes.magic_damage,
+        physical_armor: card.metadata.attributes.physical_armor,
+        magic_armor: card.metadata.attributes.magic_armor,
+        attack_speed: card.metadata.attributes.attack_speed,
+        accuracy: card.metadata.attributes.accuracy,
+        evasion: card.metadata.attributes.evasion,
+        crit_chance: card.metadata.attributes.crit_chance,
+        power_rating: card.metadata.powerRating,
+        created_at: card.created_at,
+        updated_at: card.updated_at
+      }));
+    } catch (error) {
+      console.error('Error getting card instances:', error);
+      return [];
+    }
+  },
+
+  // Get card templates (mock for now)
+  async getCardTemplates(filters?: { 
+    wave?: string; 
+    rarity?: string; 
+    limit?: number;
+  }): Promise<CardTemplate[]> {
+    // This would typically fetch from a card_templates table
+    // For now, return mock data
+    return [
+      {
+        id: '1',
+        name: 'Fire Warrior Template',
+        description: 'A basic fire warrior template',
+        wave: 'red',
+        rarity: 'common',
+        base_stats: {
+          physical_damage: 100,
+          magic_damage: 50,
+          physical_armor: 80,
+          magic_armor: 40,
+          attack_speed: 120,
+          accuracy: 85,
+          evasion: 30,
+          crit_chance: 10
+        },
+        created_at: new Date().toISOString()
+      }
+    ];
+  },
+
+  // Get card by NFT address
+  async getCardByNFTAddress(nftAddress: string): Promise<CardInstance | null> {
+    try {
+      const { data, error } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('card_id', nftAddress)
+        .single();
+      
+      if (error || !data) {
+        return null;
+      }
+
+      return {
+        id: data.id,
+        card_index: parseInt(data.card_id.slice(-3)) || 0,
+        nft_address: data.card_id,
+        owner_address: data.owner_address,
+        name: data.metadata.name,
+        description: data.metadata.description,
+        lore: data.metadata.lore,
+        rarity: data.metadata.rarity,
+        wave: data.metadata.attributes.wave,
+        physical_damage: data.metadata.attributes.physical_damage,
+        magic_damage: data.metadata.attributes.magic_damage,
+        physical_armor: data.metadata.attributes.physical_armor,
+        magic_armor: data.metadata.attributes.magic_armor,
+        attack_speed: data.metadata.attributes.attack_speed,
+        accuracy: data.metadata.attributes.accuracy,
+        evasion: data.metadata.attributes.evasion,
+        crit_chance: data.metadata.attributes.crit_chance,
+        power_rating: data.metadata.powerRating,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+    } catch (error) {
+      console.error('Error getting card by NFT address:', error);
+      return null;
+    }
+  },
+
+  // Save card instance (transform and save as Card)
+  async saveCardInstance(cardData: Omit<CardInstance, 'id' | 'created_at'>): Promise<CardInstance | null> {
+    try {
+      // Transform CardInstance to Card format
+      const cardToSave = {
+        card_id: cardData.nft_address,
+        owner_address: cardData.owner_address,
+        rarity: ['common', 'uncommon', 'rare', 'epic', 'legendary'].indexOf(cardData.rarity),
+        level: 1,
+        experience: '0',
+        metadata: {
+          name: cardData.name,
+          description: cardData.description,
+          lore: cardData.lore,
+          rarity: cardData.rarity,
+          powerRating: cardData.power_rating,
+          dominantStat: 'physical_damage',
+          imageUrl: '',
+          attributes: {
+            wave: cardData.wave,
+            physical_damage: cardData.physical_damage,
+            magic_damage: cardData.magic_damage,
+            physical_armor: cardData.physical_armor,
+            magic_armor: cardData.magic_armor,
+            attack_speed: cardData.attack_speed,
+            accuracy: cardData.accuracy,
+            evasion: cardData.evasion,
+            crit_chance: cardData.crit_chance
+          }
+        },
+        transaction_hash: '',
+        block_number: 0
+      };
+
+      const { data, error } = await supabase
+        .from('cards')
+        .insert(cardToSave)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform back to CardInstance
+      return {
+        id: data.id,
+        card_index: cardData.card_index,
+        nft_address: data.card_id,
+        owner_address: data.owner_address,
+        name: data.metadata.name,
+        description: data.metadata.description,
+        lore: data.metadata.lore,
+        rarity: data.metadata.rarity,
+        wave: data.metadata.attributes.wave,
+        physical_damage: data.metadata.attributes.physical_damage,
+        magic_damage: data.metadata.attributes.magic_damage,
+        physical_armor: data.metadata.attributes.physical_armor,
+        magic_armor: data.metadata.attributes.magic_armor,
+        attack_speed: data.metadata.attributes.attack_speed,
+        accuracy: data.metadata.attributes.accuracy,
+        evasion: data.metadata.attributes.evasion,
+        crit_chance: data.metadata.attributes.crit_chance,
+        power_rating: data.metadata.powerRating,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+    } catch (error) {
+      console.error('Error saving card instance:', error);
+      return null;
+    }
   }
 };
 
