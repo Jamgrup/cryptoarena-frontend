@@ -53,13 +53,14 @@ export function getImageUrl(path: string): string {
  * Получить URL изображения волны (wave) - размер 36x36px
  */
 export function getWaveImageUrl(waveName: string): string {
+  // Используем простые имена файлов, предполагая что они переименованы в Storage
   const waveFileNames: {[key: string]: string} = {
-    'red': 'Color=RED.png',
-    'orange': 'Color=Orange.png', 
-    'yellow': 'Color=Yellow.png',
-    'green': 'Color=Green.png',
-    'blue': 'Color=Blue.png',
-    'purple': 'Color=Purple.png'
+    'red': 'red.png',
+    'orange': 'orange.png', 
+    'yellow': 'yellow.png',
+    'green': 'green.png',
+    'blue': 'blue.png',
+    'purple': 'purple.png'
   };
   
   const fileName = waveFileNames[waveName.toLowerCase()];

@@ -151,60 +151,49 @@ export const supabaseHelpers = {
     }
   },
 
-  // Get user profile from database
+  // Get user profile from backend API (avoiding RLS issues)
   async getUserProfile(walletAddress: string): Promise<User | null> {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('wallet_address', walletAddress)
-        .single();
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
+      const response = await fetch(`${backendUrl}/api/v1/user/${walletAddress}/profile`);
       
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // User not found
-          return null;
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // User not found
         }
-        console.error('Error fetching user profile:', error);
-        return null;
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      return data as User;
+      const data = await response.json();
+      return data.success ? data.data : null;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
     }
   },
 
-  // Create or update user profile
+  // Create or update user profile via backend API
   async createOrUpdateUserProfile(profileData: {
     wallet_address: string;
     username?: string;
     avatar_url?: string;
   }): Promise<User | null> {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .upsert({
-          wallet_address: profileData.wallet_address,
-          username: profileData.username || `User${profileData.wallet_address.slice(-4)}`,
-          avatar_url: profileData.avatar_url || null,
-          cards_owned: 0,
-          gems_balance: '0',
-          level: 1,
-          experience: 0,
-          last_login: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'wallet_address' })
-        .select()
-        .single();
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
+      const response = await fetch(`${backendUrl}/api/v1/user/${profileData.wallet_address}/profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
       
-      if (error) {
-        console.error('Error saving user profile:', error);
-        return null;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      return data as User;
+      const data = await response.json();
+      return data.success ? data.data : null;
     } catch (error) {
       console.error('Error saving user profile:', error);
       return null;
