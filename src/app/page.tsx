@@ -9,12 +9,13 @@ import { GemBalance } from '@/components/GemBalance'
 import { CardCreation } from '@/components/CardCreation'
 import { NFTCardGallery } from '@/components/NFTCardGallery'
 import { SupabaseCardGallery } from '@/components/SupabaseCardGallery'
+import { UserNFTCollection } from '@/components/UserNFTCollection'
 import { UserProfile } from '@/components/UserProfile'
 import { ContractInfo } from '@/components/ContractInfo'
 
 export default function Home() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
-  const [activeTab, setActiveTab] = useState<'blockchain' | 'supabase'>('blockchain')
+  const [activeTab, setActiveTab] = useState<'my-cards' | 'blockchain' | 'supabase'>('my-cards')
   const address = useTonAddress()
 
   return (
@@ -51,28 +52,40 @@ export default function Home() {
               <div className="mb-8">
                 <div className="flex space-x-1 bg-white/10 rounded-lg p-1 mb-6">
                   <button
+                    onClick={() => setActiveTab('my-cards')}
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === 'my-cards'
+                        ? 'bg-white text-gray-900'
+                        : 'text-white hover:text-gray-300'
+                    }`}
+                  >
+                    🎴 My Cards
+                  </button>
+                  <button
                     onClick={() => setActiveTab('blockchain')}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                       activeTab === 'blockchain'
                         ? 'bg-white text-gray-900'
                         : 'text-white hover:text-gray-300'
                     }`}
                   >
-                    📡 Blockchain Data
+                    📡 Collection
                   </button>
                   <button
                     onClick={() => setActiveTab('supabase')}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                       activeTab === 'supabase'
                         ? 'bg-white text-gray-900'
                         : 'text-white hover:text-gray-300'
                     }`}
                   >
-                    🗄️ Supabase Data
+                    🗄️ Database
                   </button>
                 </div>
 
-                {activeTab === 'blockchain' ? (
+                {activeTab === 'my-cards' ? (
+                  <UserNFTCollection />
+                ) : activeTab === 'blockchain' ? (
                   <NFTCardGallery />
                 ) : (
                   <SupabaseCardGallery walletAddress={address} />
