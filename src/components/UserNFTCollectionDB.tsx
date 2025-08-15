@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTonAddress } from '@tonconnect/ui-react';
+import { useTonAddress, useTonWallet } from '@tonconnect/ui-react';
 import { getWaveImageUrl, getCardImageUrl } from '@/lib/supabase';
 import { getRarityColor, getWaveColor } from '@/lib/heroes';
 import { supabaseHelpers } from '@/lib/supabaseClient';
@@ -39,6 +39,7 @@ interface UserNFTCollectionProps {
 
 export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) {
   const address = useTonAddress();
+  const wallet = useTonWallet();
   const [cards, setCards] = useState<NFTCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,17 +47,22 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
 
   // Debug logging for address changes
   useEffect(() => {
-    console.log('UserNFTCollectionDB address changed:', {
+    console.log('UserNFTCollectionDB wallet state changed:', {
       address,
+      wallet: wallet?.account?.address,
+      walletConnected: !!wallet,
       type: typeof address,
       length: address?.length,
       isEmpty: !address || address.trim() === ''
     });
-  }, [address]);
+  }, [address, wallet]);
 
   // Sync blockchain data with database
   const syncWithBlockchain = async () => {
-    if (!address || address.trim() === '') return;
+    if (!wallet || !address || address.trim() === '') {
+      console.warn('Cannot sync: wallet not connected or address is empty');
+      return;
+    }
 
     try {
       console.log('Syncing blockchain data with database...');
@@ -100,7 +106,7 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
 
   // Fetch user's NFT cards from database only
   const fetchUserCards = async () => {
-    if (!address || address.trim() === '') {
+    if (!wallet || !address || address.trim() === '') {
       setCards([]);
       return;
     }
@@ -157,7 +163,7 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
 
   // Real-time subscription to cards changes
   useEffect(() => {
-    if (!address || address.trim() === '') return;
+    if (!wallet || !address || address.trim() === '') return;
 
     const subscription = supabaseHelpers.subscribeToUserCards(address, (payload) => {
       console.log('Cards changed:', payload);
@@ -170,12 +176,15 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
     };
   }, [address]);
 
-  if (!address || address.trim() === '') {
+  // Show wallet connection prompt if wallet not connected or address is empty
+  if (!wallet || !address || address.trim() === '') {
     return (
       <div className={`p-6 bg-gray-50 border border-gray-200 rounded-lg ${className}`}>
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 mb-2">🎴 Your NFT Collection</h3>
-          <p className="text-gray-600">Connect your wallet to view your NFT cards</p>
+          <p className="text-gray-600">
+            {!wallet ? 'Connect your wallet to view your NFT cards' : 'Waiting for wallet connection...'}
+          </p>
         </div>
       </div>
     );
