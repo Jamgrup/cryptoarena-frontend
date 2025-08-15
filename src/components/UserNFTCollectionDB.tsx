@@ -57,15 +57,34 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
+        credentials: 'omit',
       });
 
       if (response.ok) {
         const data = await response.json();
         console.log('Sync completed:', data);
+        
+        // Show success feedback to user
+        if (data.success) {
+          const syncedCount = data.data?.syncedCards || 0;
+          if (syncedCount > 0) {
+            console.log(`Successfully synced ${syncedCount} NFT cards from blockchain`);
+          } else {
+            console.log('No new cards found to sync');
+          }
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Sync response error:', errorText);
+        throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('Sync failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
+      setError(`Sync failed: ${errorMessage}`);
     }
   };
 
@@ -108,7 +127,15 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
       }
     } catch (error) {
       console.error('Error fetching user cards:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load your NFT cards');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load your NFT cards';
+      
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('network')) {
+        setError('Unable to connect to backend server. Please check your internet connection and try again.');
+      } else if (errorMessage.includes('CORS')) {
+        setError('Connection blocked by browser security. Please try refreshing the page.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
