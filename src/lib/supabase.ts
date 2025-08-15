@@ -72,53 +72,29 @@ export function getWaveImageUrl(waveName: string): string {
 }
 
 /**
- * Получить URL изображения карты по доминирующей характеристике и редкости
+ * Получить URL изображения карты из Supabase Storage (реальные изображения)
  */
-export function getCardImageUrl(card: { physical_damage: number, magic_damage: number, physical_armor: number, magic_armor: number, attack_speed: number, accuracy: number, evasion: number, crit_chance: number }, rarity: string): string {
-  // Определяем доминирующую характеристику для выбора типа изображения
-  const characteristics = {
-    physical_damage: card.physical_damage,
-    magic_damage: card.magic_damage,
-    attack_speed: card.attack_speed,
-    accuracy: card.accuracy,
-    evasion: card.evasion,
-    physical_armor: card.physical_armor,
-    magic_armor: card.magic_armor,
-    crit_chance: card.crit_chance * 4
-  }
+export function getCardImageUrl(card: { physical_damage: number, magic_damage: number, physical_armor: number, magic_armor: number, attack_speed: number, accuracy: number, evasion: number, crit_chance: number }, rarity?: string): string {
+  // Используем рандомное изображение из доступных в bucket
+  const availableImages = ['warior_1.png', 'warior_2.png', 'warior_3.png'];
   
-  const dominantChar = Object.keys(characteristics).reduce((a, b) => 
-    characteristics[a as keyof typeof characteristics] > characteristics[b as keyof typeof characteristics] ? a : b
-  ) as keyof typeof characteristics
+  // Создаем стабильный seed на основе характеристик для консистентности
+  const seed = card.physical_damage + card.magic_damage + card.attack_speed + card.accuracy;
+  const imageIndex = seed % availableImages.length;
+  const selectedImage = availableImages[imageIndex];
   
-  // Маппинг характеристик на существующие типы карт
-  const charToType: {[key: string]: string} = {
-    physical_damage: 'warrior',
-    magic_damage: 'mage', 
-    attack_speed: 'assassin',
-    accuracy: 'archer',
-    evasion: 'hunter',
-    physical_armor: 'paladin',
-    magic_armor: 'priest',
-    crit_chance: 'warlock'
-  }
-  
-  const type = charToType[dominantChar] || 'warrior'
-  return getImageUrl(`cards/${type.toLowerCase()}_${rarity.toLowerCase()}.svg`);
+  return getImageUrl(`cards/${selectedImage}`);
 }
 
 /**
  * Получить случайное изображение карты для предпросмотра (без характеристик)
  */
 export function getRandomCardImageUrl(): string {
-  const cardTypes = ['warrior', 'mage', 'assassin', 'archer', 'hunter', 'paladin', 'priest', 'warlock'];
-  const rarities = ['common', 'rare', 'epic', 'legendary'];
+  // Используем реальные изображения из Supabase Storage
+  const availableImages = ['warior_1.png', 'warior_2.png', 'warior_3.png'];
+  const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
   
-  const randomType = cardTypes[Math.floor(Math.random() * cardTypes.length)];
-  const randomRarity = rarities[Math.floor(Math.random() * rarities.length)];
-  
-  // Fallback к placeholder если изображения нет
-  return getPlaceholderImage('card');
+  return getImageUrl(`cards/${randomImage}`);
 }
 
 /**
