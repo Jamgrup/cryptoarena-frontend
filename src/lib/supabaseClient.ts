@@ -186,8 +186,15 @@ export const supabaseHelpers = {
       const { data, error } = await supabase
         .from('users')
         .upsert({
-          ...profileData,
-          last_login: new Date().toISOString()
+          wallet_address: profileData.wallet_address,
+          username: profileData.username || `User${profileData.wallet_address.slice(-4)}`,
+          avatar_url: profileData.avatar_url || null,
+          cards_owned: 0,
+          gems_balance: '0',
+          level: 1,
+          experience: 0,
+          last_login: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }, { onConflict: 'wallet_address' })
         .select()
         .single();

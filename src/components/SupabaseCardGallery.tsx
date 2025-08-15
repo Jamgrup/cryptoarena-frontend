@@ -50,7 +50,7 @@ function NFTCardDisplay({ card, onClick }: NFTCardDisplayProps) {
           </h3>
           <div className="flex justify-center items-center gap-2 mt-1">
             <span className={`text-xs px-2 py-1 rounded ${getRarityColor(card.rarity)} bg-gray-800 border border-current`}>
-              {card.rarity.toUpperCase()}
+              {card.rarity?.toUpperCase() || 'UNKNOWN'}
             </span>
             <span className="text-xs text-gray-400">
               #{card.card_index}

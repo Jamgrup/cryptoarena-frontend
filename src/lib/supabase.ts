@@ -3,15 +3,15 @@
  * Combines Storage (images) + Database (metadata) + Generation logic
  */
 
-import { createClient } from '@supabase/supabase-js';
+// Import shared Supabase client from supabaseClient.ts to avoid duplicates
+import { supabase } from './supabaseClient';
 
 // Supabase configuration
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dkukyfkinwpldnztoqhk.supabase.co';
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const STORAGE_BUCKET = 'nft-images';
 
-// Create Supabase client for frontend
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Export the shared client instead of creating a new one
+export { supabase };
 
 // Card attributes interface
 export interface CardAttributes {

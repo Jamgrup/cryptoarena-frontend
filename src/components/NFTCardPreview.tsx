@@ -143,7 +143,7 @@ export function NFTCardPreview({ onPreviewGenerated, className = '' }: NFTCardPr
                 }}
               />
               <span className={`px-2 py-1 text-xs font-medium rounded ${getWaveColor(currentWave)} bg-white bg-opacity-90`}>
-                {currentWave.toUpperCase()}
+                {currentWave?.toUpperCase() || 'UNKNOWN'}
               </span>
             </div>
           </div>
@@ -160,7 +160,7 @@ export function NFTCardPreview({ onPreviewGenerated, className = '' }: NFTCardPr
                 metadata.rarity === 'rare' ? 'bg-blue-100 text-blue-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {metadata.rarity.toUpperCase()}
+                {metadata.rarity?.toUpperCase() || 'UNKNOWN'}
               </span>
               {metadata.powerRating > 0 && (
                 <span className="px-2 py-1 bg-green-100 text-green-800 rounded font-medium">
