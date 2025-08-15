@@ -1,10 +1,42 @@
 /**
- * Supabase Storage Helper for NFT Images
+ * Unified Supabase Integration for NFT Cards
+ * Combines Storage (images) + Database (metadata) + Generation logic
  */
 
-// Supabase public URL - замените на ваш реальный URL из Supabase Dashboard
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase configuration
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dkukyfkinwpldnztoqhk.supabase.co';
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const STORAGE_BUCKET = 'nft-images';
+
+// Create Supabase client for frontend
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Card attributes interface
+export interface CardAttributes {
+  wave: string;
+  level: number;
+  physical_damage: number;
+  magic_damage: number;
+  physical_armor: number;
+  magic_armor: number;
+  attack_speed: number;
+  accuracy: number;
+  evasion: number;
+  crit_chance: number;
+}
+
+// Generated card metadata interface
+export interface GeneratedCardMetadata {
+  name: string;
+  description: string;
+  lore: string;
+  rarity: string;
+  powerRating: number;
+  dominantStat: string;
+  imageUrl: string;
+}
 
 /**
  * Получить публичный URL для изображения из Supabase Storage

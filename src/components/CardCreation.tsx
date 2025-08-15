@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTonConnectUI, useTonAddress, useTonWallet } from '@tonconnect/ui-react';
 import { Address, toNano, beginCell } from '@ton/core';
+import { NFTCardPreview } from './NFTCardPreview';
 
 interface CardCreationProps {
   className?: string;
@@ -24,6 +25,29 @@ interface MintInfo {
   instructions: string[];
 }
 
+interface CardAttributes {
+  wave: 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple';
+  level: number;
+  physical_damage: number;
+  magic_damage: number;
+  physical_armor: number;
+  magic_armor: number;
+  attack_speed: number;
+  accuracy: number;
+  evasion: number;
+  crit_chance: number;
+}
+
+interface GeneratedCardMetadata {
+  name: string;
+  description: string;
+  lore: string;
+  rarity: string;
+  powerRating: number;
+  dominantStat: string;
+  imageUrl: string;
+}
+
 export function CardCreation({ className = '' }: CardCreationProps) {
   const [tonConnectUI] = useTonConnectUI();
   const wallet = useTonWallet();
@@ -33,6 +57,11 @@ export function CardCreation({ className = '' }: CardCreationProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // Preview state
+  const [previewAttributes, setPreviewAttributes] = useState<CardAttributes | null>(null);
+  const [previewMetadata, setPreviewMetadata] = useState<GeneratedCardMetadata | null>(null);
+  const [showPreview, setShowPreview] = useState(true);
 
   // Fetch collection info with retry logic
   const fetchCollectionInfo = async (retryCount = 0) => {
@@ -90,6 +119,12 @@ export function CardCreation({ className = '' }: CardCreationProps) {
 
   // Get connection state using recommended hooks
   const connected = !!wallet;
+
+  // Handle preview generation
+  const handlePreviewGenerated = (attributes: CardAttributes, metadata: GeneratedCardMetadata) => {
+    setPreviewAttributes(attributes);
+    setPreviewMetadata(metadata);
+  };
 
   // Prepare mint transaction
   const prepareMint = async () => {
@@ -283,17 +318,35 @@ export function CardCreation({ className = '' }: CardCreationProps) {
   }
 
   return (
-    <div className={`p-6 bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">🎴 Create NFT Card</h3>
-        <button
-          onClick={() => fetchCollectionInfo()}
-          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
-          disabled={loading}
-        >
-          Refresh
-        </button>
-      </div>
+    <div className={`space-y-6 ${className}`}>
+      {/* NFT Card Preview */}
+      {showPreview && (
+        <NFTCardPreview 
+          onPreviewGenerated={handlePreviewGenerated}
+          className="mb-6"
+        />
+      )}
+
+      {/* Card Creation Panel */}
+      <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">🎴 Create NFT Card</h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded"
+            >
+              {showPreview ? 'Hide' : 'Show'} Preview
+            </button>
+            <button
+              onClick={() => fetchCollectionInfo()}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
+              disabled={loading}
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
 
       {/* Collection Info */}
       {collectionInfo && (
@@ -330,6 +383,31 @@ export function CardCreation({ className = '' }: CardCreationProps) {
         </div>
       )}
 
+      {/* Preview Info */}
+      {previewMetadata && (
+        <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <h4 className="font-medium text-purple-900 mb-2">💎 Card Preview</h4>
+          <div className="flex items-center gap-4">
+            <img
+              src={previewMetadata.imageUrl}
+              alt={previewMetadata.name}
+              className="w-16 h-16 object-cover rounded border"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/placeholder-card.svg';
+              }}
+            />
+            <div className="space-y-1 text-sm text-purple-800 flex-1">
+              <p><span className="font-medium">Name:</span> {previewMetadata.name}</p>
+              <p><span className="font-medium">Rarity:</span> {previewMetadata.rarity}</p>
+              <p><span className="font-medium">Power:</span> {previewMetadata.powerRating}</p>
+              {previewAttributes && (
+                <p><span className="font-medium">Wave:</span> {previewAttributes.wave} • <span className="font-medium">Level:</span> {previewAttributes.level}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mint Info */}
       {mintInfo && (
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -338,6 +416,9 @@ export function CardCreation({ className = '' }: CardCreationProps) {
             <p><span className="font-medium">Card #:</span> {mintInfo.nextItemIndex}</p>
             <p><span className="font-medium">Cost:</span> {mintInfo.mintValue} TON</p>
             <p><span className="font-medium">Recipient:</span> {address}</p>
+            {previewMetadata && (
+              <p><span className="font-medium">Card:</span> {previewMetadata.name} ({previewMetadata.rarity})</p>
+            )}
           </div>
         </div>
       )}
@@ -448,6 +529,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
             )}
           </div>
         </details>
+      </div>
       </div>
     </div>
   );
