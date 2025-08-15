@@ -5,7 +5,6 @@ import { useTonAddress } from '@tonconnect/ui-react'
 import { WalletConnector } from '@/components/WalletConnector'
 import { NFTMintCard } from '@/components/NFTMintCard'
 import { WaveDisplay } from '@/components/WaveDisplay'
-import { GemBalance } from '@/components/GemBalance'
 import { NFTCardGallery } from '@/components/NFTCardGallery'
 import { SupabaseCardGallery } from '@/components/SupabaseCardGallery'
 import { UserNFTCollectionDB } from '@/components/UserNFTCollectionDB'
@@ -36,13 +35,8 @@ export default function Home() {
 
           {isWalletConnected && (
             <>
-              <div className="grid md:grid-cols-3 gap-6 mb-8">
-                <div className="md:col-span-2">
-                  <GemBalance />
-                </div>
-                <div>
-                  <UserProfileDB />
-                </div>
+              <div className="mb-8">
+                <UserProfileDB />
               </div>
 
               <NFTMintCard />

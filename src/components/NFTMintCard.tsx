@@ -367,7 +367,7 @@ export function NFTMintCard() {
                 </div>
               </div>
               
-              <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-gray-800">
+              <div className="relative w-full aspect-[2/3] mb-4 rounded-lg overflow-hidden bg-gray-800">
                 <Image
                   src={currentCard.imageUrl}
                   alt={currentCard.name}
@@ -380,9 +380,9 @@ export function NFTMintCard() {
                   <Image
                     src={getWaveImageUrl(currentWave)}
                     alt={currentWave}
-                    width={24}
-                    height={24}
-                    className="rounded-full border border-white/30"
+                    width={32}
+                    height={32}
+                    className="rounded-full border-2 border-white/50 bg-black/30 p-1"
                   />
                 </div>
               </div>
@@ -419,6 +419,50 @@ export function NFTMintCard() {
               <p className="text-white/60 text-sm leading-relaxed">
                 {currentCard.lore}
               </p>
+            </div>
+
+            {/* NFT Characteristics */}
+            <div className="bg-white/5 rounded-lg p-4 mb-4">
+              <h4 className="text-sm font-bold text-cyan-400 mb-3">NFT CHARACTERISTICS RANGES</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-gray-800/50 rounded p-2">
+                  <div className="text-red-400 font-medium">Physical Damage</div>
+                  <div className="text-white/70">1 - 100</div>
+                </div>
+                <div className="bg-gray-800/50 rounded p-2">
+                  <div className="text-blue-400 font-medium">Magic Damage</div>
+                  <div className="text-white/70">1 - 100</div>
+                </div>
+                <div className="bg-gray-800/50 rounded p-2">
+                  <div className="text-orange-400 font-medium">Physical Armor</div>
+                  <div className="text-white/70">0 - 50</div>
+                </div>
+                <div className="bg-gray-800/50 rounded p-2">
+                  <div className="text-purple-400 font-medium">Magic Armor</div>
+                  <div className="text-white/70">0 - 50</div>
+                </div>
+                <div className="bg-gray-800/50 rounded p-2">
+                  <div className="text-yellow-400 font-medium">Attack Speed</div>
+                  <div className="text-white/70">1 - 50</div>
+                </div>
+                <div className="bg-gray-800/50 rounded p-2">
+                  <div className="text-green-400 font-medium">Accuracy</div>
+                  <div className="text-white/70">0 - 100</div>
+                </div>
+                <div className="bg-gray-800/50 rounded p-2">
+                  <div className="text-pink-400 font-medium">Evasion</div>
+                  <div className="text-white/70">0 - 100</div>
+                </div>
+                <div className="bg-gray-800/50 rounded p-2">
+                  <div className="text-red-500 font-medium">Crit Chance</div>
+                  <div className="text-white/70">0 - 25%</div>
+                </div>
+              </div>
+              <div className="mt-3 p-2 bg-blue-900/20 border border-blue-500/30 rounded">
+                <p className="text-blue-400 text-xs text-center">
+                  ⚡ Actual values generated randomly on mint with wave bonuses
+                </p>
+              </div>
             </div>
 
             {/* Mint Info */}
