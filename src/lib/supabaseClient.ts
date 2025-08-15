@@ -137,16 +137,36 @@ export const supabaseHelpers = {
   async getUserCards(walletAddress: string): Promise<Card[]> {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
-      const response = await fetch(`${backendUrl}/api/v1/nft/user/${walletAddress}/cards`);
+      console.log(`Fetching cards for wallet: ${walletAddress} from ${backendUrl}`);
+      
+      const response = await fetch(`${backendUrl}/api/v1/nft/user/${walletAddress}/cards`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
+        credentials: 'omit',
+      });
+      
+      console.log(`Response status: ${response.status} ${response.statusText}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch user cards');
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('Response data:', data);
       return data.success ? data.data.cards : [];
     } catch (error) {
       console.error('Error fetching user cards:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return [];
     }
   },
@@ -155,19 +175,39 @@ export const supabaseHelpers = {
   async getUserProfile(walletAddress: string): Promise<User | null> {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
-      const response = await fetch(`${backendUrl}/api/v1/user/${walletAddress}/profile`);
+      console.log(`Fetching profile for wallet: ${walletAddress} from ${backendUrl}`);
+      
+      const response = await fetch(`${backendUrl}/api/v1/user/${walletAddress}/profile`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
+        credentials: 'omit',
+      });
+      
+      console.log(`Profile response status: ${response.status} ${response.statusText}`);
       
       if (!response.ok) {
         if (response.status === 404) {
+          console.log('User profile not found');
           return null; // User not found
         }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Profile response error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('Profile response data:', data);
       return data.success ? data.data : null;
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      console.error('Profile error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
       return null;
     }
   },
@@ -180,22 +220,36 @@ export const supabaseHelpers = {
   }): Promise<User | null> {
     try {
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
+      console.log(`Saving profile for wallet: ${profileData.wallet_address}`, profileData);
+      
       const response = await fetch(`${backendUrl}/api/v1/user/${profileData.wallet_address}/profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        mode: 'cors',
+        credentials: 'omit',
         body: JSON.stringify(profileData),
       });
       
+      console.log(`Save profile response status: ${response.status} ${response.statusText}`);
+      
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Save profile response error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('Save profile response data:', data);
       return data.success ? data.data : null;
     } catch (error) {
       console.error('Error saving user profile:', error);
+      console.error('Save profile error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
       return null;
     }
   },
