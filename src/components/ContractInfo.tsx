@@ -10,8 +10,8 @@ export function ContractInfo({ className = '' }: ContractInfoProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const contractAddresses = {
-    cardCollection: process.env.NEXT_PUBLIC_CARD_COLLECTION_ADDRESS || 'EQAc5JWhD24xJoqjzEHKjjYyAgQt_Jw27slB6M_IiAZ0DXCs',
-    gemToken: process.env.NEXT_PUBLIC_GEM_TOKEN_ADDRESS || 'EQBpuui3XPoorUc45MNZ9809LCa3nz9YTqDhMOgCNBvkJYeg',
+    cardCollection: process.env.NEXT_PUBLIC_CARD_COLLECTION_ADDRESS || 'EQA4C2luktP3sDq04-ShBmgq2yutYMMfEnJR76vtaX7IS1Ff',
+    gemToken: process.env.NEXT_PUBLIC_GEM_TOKEN_ADDRESS || 'EQDK6Sj-3sNkW01xuvAs1mbbp6M8Nr_eQlvyBHRUOjVteFUK',
   };
 
   const network = process.env.NEXT_PUBLIC_TON_NETWORK || 'testnet';
@@ -51,7 +51,7 @@ export function ContractInfo({ className = '' }: ContractInfoProps) {
           {/* Contract Addresses */}
           <div className="space-y-3">
             <div className="bg-white/5 rounded-lg p-3">
-              <div className="text-cyan-400 font-bold text-sm mb-2">CARD COLLECTION V6</div>
+              <div className="text-cyan-400 font-bold text-sm mb-2">CARD COLLECTION V7</div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-white font-mono text-xs">
@@ -118,7 +118,8 @@ export function ContractInfo({ className = '' }: ContractInfoProps) {
             <div className="text-cyan-400 font-bold text-sm mb-2">FEATURES</div>
             <div className="space-y-1 text-white/80 text-xs">
               <div>✅ NFT Card Creation & Trading</div>
-              <div>✅ Supabase Metadata Integration</div>
+              <div>✅ Supabase Hero Images Integration</div>
+              <div>✅ Automatic Hero Image Generation</div>
               <div>✅ Real-time Card Updates</div>
               <div>✅ User Profile Management</div>
               <div>✅ Gas Optimized Contracts</div>
@@ -131,10 +132,10 @@ export function ContractInfo({ className = '' }: ContractInfoProps) {
           <div className="bg-white/5 rounded-lg p-3">
             <div className="text-cyan-400 font-bold text-sm mb-2">VERSION INFO</div>
             <div className="space-y-1 text-white/80 text-xs">
-              <div>Contract Version: V6 (Gas Optimized)</div>
+              <div>Contract Version: V7 (Hero Images Integration)</div>
               <div>Frontend: Next.js 14 + Supabase</div>
               <div>Backend: Express.js + TON Integration</div>
-              <div>Deployed: {new Date('2025-08-14').toLocaleDateString()}</div>
+              <div>Deployed: {new Date('2025-08-15').toLocaleDateString()}</div>
             </div>
           </div>
         </div>
