@@ -55,6 +55,30 @@ export interface Card {
   updated_at: string;
 }
 
+// Legacy interface for backward compatibility
+export interface CardInstance {
+  id: string;
+  card_index: number;
+  nft_address: string;
+  owner_address: string;
+  name: string;
+  description: string;
+  lore: string;
+  rarity: string;
+  wave: string;
+  physical_damage: number;
+  magic_damage: number;
+  physical_armor: number;
+  magic_armor: number;
+  attack_speed: number;
+  accuracy: number;
+  evasion: number;
+  crit_chance: number;
+  power_rating: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Transaction {
   id: string;
   hash: string;
