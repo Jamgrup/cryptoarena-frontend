@@ -25,27 +25,38 @@ interface MintInfo {
   instructions: string[];
 }
 
-interface CardAttributes {
-  wave: 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple';
-  level: number;
-  physical_damage: number;
-  magic_damage: number;
-  physical_armor: number;
-  magic_armor: number;
-  attack_speed: number;
-  accuracy: number;
-  evasion: number;
-  crit_chance: number;
-}
+type WaveType = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple';
 
 interface GeneratedCardMetadata {
   name: string;
   description: string;
   lore: string;
-  rarity: string;
-  powerRating: number;
-  dominantStat: string;
   imageUrl: string;
+  waveImageUrl: string;
+}
+
+interface RealNFTData {
+  index: string;
+  address: string;
+  attributes: {
+    wave: WaveType;
+    level: number;
+    physical_damage: number;
+    magic_damage: number;
+    physical_armor: number;
+    magic_armor: number;
+    attack_speed: number;
+    accuracy: number;
+    evasion: number;
+    crit_chance: number;
+  };
+  metadata: {
+    name: string;
+    description: string;
+    lore: string;
+    rarity: string;
+    powerRating: number;
+  };
 }
 
 export function CardCreation({ className = '' }: CardCreationProps) {
@@ -59,9 +70,13 @@ export function CardCreation({ className = '' }: CardCreationProps) {
   const [success, setSuccess] = useState<string | null>(null);
   
   // Preview state
-  const [previewAttributes, setPreviewAttributes] = useState<CardAttributes | null>(null);
+  const [previewWave, setPreviewWave] = useState<WaveType | null>(null);
   const [previewMetadata, setPreviewMetadata] = useState<GeneratedCardMetadata | null>(null);
   const [showPreview, setShowPreview] = useState(true);
+  
+  // Real NFT state
+  const [realNFT, setRealNFT] = useState<RealNFTData | null>(null);
+  const [loadingRealNFT, setLoadingRealNFT] = useState(false);
 
   // Fetch collection info with retry logic
   const fetchCollectionInfo = async (retryCount = 0) => {
@@ -121,9 +136,54 @@ export function CardCreation({ className = '' }: CardCreationProps) {
   const connected = !!wallet;
 
   // Handle preview generation
-  const handlePreviewGenerated = (attributes: CardAttributes, metadata: GeneratedCardMetadata) => {
-    setPreviewAttributes(attributes);
+  const handlePreviewGenerated = (wave: WaveType, metadata: GeneratedCardMetadata) => {
+    setPreviewWave(wave);
     setPreviewMetadata(metadata);
+  };
+
+  // Fetch real NFT data after minting
+  const fetchRealNFTData = async (cardIndex: string) => {
+    try {
+      setLoadingRealNFT(true);
+      
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
+      const response = await fetch(`${backendUrl}/api/v1/nft/card/${cardIndex}/metadata`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(15000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        const realData: RealNFTData = {
+          index: cardIndex,
+          address: data.data.nftAddress,
+          attributes: data.data.attributes,
+          metadata: {
+            name: data.data.name,
+            description: data.data.description,
+            lore: data.data.lore,
+            rarity: data.data.rarity,
+            powerRating: data.data.powerRating
+          }
+        };
+        
+        setRealNFT(realData);
+        return realData;
+      } else {
+        throw new Error(data.error || 'Failed to fetch NFT data');
+      }
+    } catch (error) {
+      console.error('Error fetching real NFT data:', error);
+      return null;
+    } finally {
+      setLoadingRealNFT(false);
+    }
   };
 
   // Prepare mint transaction
@@ -237,9 +297,11 @@ export function CardCreation({ className = '' }: CardCreationProps) {
           setSuccess(`✅ Mint transaction sent! Your NFT card #${mintInfo.nextItemIndex} is being created.`);
           setMintInfo(null);
           
-          setTimeout(() => {
-            fetchCollectionInfo();
-          }, 5000);
+          // Fetch real NFT data after a delay
+          setTimeout(async () => {
+            await fetchCollectionInfo();
+            await fetchRealNFTData(mintInfo.nextItemIndex);
+          }, 8000); // 8 seconds delay for contract processing
           return;
         }
       } catch (tonConnectError) {
@@ -384,9 +446,9 @@ export function CardCreation({ className = '' }: CardCreationProps) {
       )}
 
       {/* Preview Info */}
-      {previewMetadata && (
+      {previewMetadata && !realNFT && (
         <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-          <h4 className="font-medium text-purple-900 mb-2">💎 Card Preview</h4>
+          <h4 className="font-medium text-purple-900 mb-2">💎 Preview (Random)</h4>
           <div className="flex items-center gap-4">
             <img
               src={previewMetadata.imageUrl}
@@ -398,12 +460,80 @@ export function CardCreation({ className = '' }: CardCreationProps) {
             />
             <div className="space-y-1 text-sm text-purple-800 flex-1">
               <p><span className="font-medium">Name:</span> {previewMetadata.name}</p>
-              <p><span className="font-medium">Rarity:</span> {previewMetadata.rarity}</p>
-              <p><span className="font-medium">Power:</span> {previewMetadata.powerRating}</p>
-              {previewAttributes && (
-                <p><span className="font-medium">Wave:</span> {previewAttributes.wave} • <span className="font-medium">Level:</span> {previewAttributes.level}</p>
+              <p className="text-xs text-purple-600 italic">Preview only - real stats generated in contract</p>
+              {previewWave && (
+                <p><span className="font-medium">Wave:</span> {previewWave}</p>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Real NFT Data */}
+      {realNFT && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <h4 className="font-medium text-green-900 mb-2">🎉 Your New NFT Card!</h4>
+          <div className="space-y-3">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <img
+                  src={previewMetadata?.waveImageUrl || '/placeholder-card.svg'}
+                  alt="Card"
+                  className="w-16 h-16 object-cover rounded border"
+                />
+                <span className="absolute -top-1 -right-1 text-xs bg-green-600 text-white px-1 rounded">
+                  #{realNFT.index}
+                </span>
+              </div>
+              <div className="space-y-1 text-sm text-green-800 flex-1">
+                <p><span className="font-medium">Name:</span> {realNFT.metadata.name}</p>
+                <p><span className="font-medium">Rarity:</span> {realNFT.metadata.rarity}</p>
+                <p><span className="font-medium">Power:</span> {realNFT.metadata.powerRating}</p>
+                <p><span className="font-medium">Wave:</span> {realNFT.attributes.wave} • <span className="font-medium">Level:</span> {realNFT.attributes.level}</p>
+              </div>
+            </div>
+            
+            {/* Real Stats */}
+            <div className="bg-green-100 p-3 rounded">
+              <h5 className="font-medium text-green-900 mb-2">📊 Actual Stats</h5>
+              <div className="grid grid-cols-2 gap-2 text-xs text-green-800">
+                <div>Phys Damage: {realNFT.attributes.physical_damage}</div>
+                <div>Magic Damage: {realNFT.attributes.magic_damage}</div>
+                <div>Attack Speed: {realNFT.attributes.attack_speed}</div>
+                <div>Accuracy: {realNFT.attributes.accuracy}</div>
+                <div>Evasion: {realNFT.attributes.evasion}</div>
+                <div>Phys Armor: {realNFT.attributes.physical_armor}</div>
+                <div>Magic Armor: {realNFT.attributes.magic_armor}</div>
+                <div>Crit Chance: {realNFT.attributes.crit_chance}</div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <a 
+                href={`https://testnet.tonscan.org/address/${realNFT.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+              >
+                View on Explorer
+              </a>
+              <button
+                onClick={() => setRealNFT(null)}
+                className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Real NFT */}
+      {loadingRealNFT && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            <span className="text-blue-800 text-sm">Loading your NFT data from blockchain...</span>
           </div>
         </div>
       )}
@@ -416,9 +546,7 @@ export function CardCreation({ className = '' }: CardCreationProps) {
             <p><span className="font-medium">Card #:</span> {mintInfo.nextItemIndex}</p>
             <p><span className="font-medium">Cost:</span> {mintInfo.mintValue} TON</p>
             <p><span className="font-medium">Recipient:</span> {address}</p>
-            {previewMetadata && (
-              <p><span className="font-medium">Card:</span> {previewMetadata.name} ({previewMetadata.rarity})</p>
-            )}
+            <p className="text-xs text-yellow-600 italic">Real stats and wave will be generated randomly in smart contract</p>
           </div>
         </div>
       )}

@@ -59,7 +59,7 @@ export function getWaveImageUrl(waveName: string): string {
     'yellow': 'Color=Yellow.png',
     'green': 'Color=Green.png',
     'blue': 'Color=Blue.png',
-    'pink': 'Color=Pink.png'
+    'purple': 'Color=Purple.png'
   };
   
   const fileName = waveFileNames[waveName.toLowerCase()];
@@ -105,6 +105,19 @@ export function getCardImageUrl(card: { physical_damage: number, magic_damage: n
   
   const type = charToType[dominantChar] || 'warrior'
   return getImageUrl(`cards/${type.toLowerCase()}_${rarity.toLowerCase()}.svg`);
+}
+
+/**
+ * Получить случайное изображение карты для предпросмотра (без характеристик)
+ */
+export function getRandomCardImageUrl(): string {
+  const cardTypes = ['warrior', 'mage', 'assassin', 'archer', 'hunter', 'paladin', 'priest', 'warlock'];
+  const rarities = ['common', 'rare', 'epic', 'legendary'];
+  
+  const randomType = cardTypes[Math.floor(Math.random() * cardTypes.length)];
+  const randomRarity = rarities[Math.floor(Math.random() * rarities.length)];
+  
+  return getImageUrl(`cards/${randomType}_${randomRarity}.svg`);
 }
 
 /**
