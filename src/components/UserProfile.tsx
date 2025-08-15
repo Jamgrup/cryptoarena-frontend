@@ -2,76 +2,65 @@
 
 import { useState, useEffect } from 'react';
 import { useTonAddress } from '@tonconnect/ui-react';
-import { useUserProfile } from '@/hooks/useSupabase';
 
 interface UserProfileProps {
   className?: string;
 }
 
+interface LocalProfile {
+  username: string;
+  totalCards: number;
+  favoriteWave: string;
+  memberSince: string;
+}
+
 export function UserProfile({ className = '' }: UserProfileProps) {
   const address = useTonAddress();
-  const { profile, loading, error, updateProfile } = useUserProfile(address);
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState('');
+  const [profile, setProfile] = useState<LocalProfile | null>(null);
 
+  // Load profile from localStorage
   useEffect(() => {
-    if (profile) {
-      setUsername(profile.username || '');
+    if (!address) {
+      setProfile(null);
+      return;
     }
-  }, [profile]);
 
-  // Auto-create profile when wallet connects
-  useEffect(() => {
-    if (address && !profile && !loading) {
-      const createInitialProfile = async () => {
-        await updateProfile({
-          wallet_address: address,
-          username: `User${address.slice(-4)}`,
-          total_cards: 0,
-          last_login: new Date().toISOString()
-        });
+    const savedProfile = localStorage.getItem(`profile_${address}`);
+    if (savedProfile) {
+      const parsed = JSON.parse(savedProfile);
+      setProfile(parsed);
+      setUsername(parsed.username);
+    } else {
+      // Create initial profile
+      const newProfile: LocalProfile = {
+        username: `User${address.slice(-4)}`,
+        totalCards: 0,
+        favoriteWave: 'None',
+        memberSince: new Date().toISOString()
       };
-      createInitialProfile();
+      setProfile(newProfile);
+      setUsername(newProfile.username);
+      localStorage.setItem(`profile_${address}`, JSON.stringify(newProfile));
     }
-  }, [address, profile, loading, updateProfile]);
+  }, [address]);
 
-  const handleSave = async () => {
-    if (!address) return;
+  const handleSave = () => {
+    if (!address || !profile) return;
 
-    const updated = await updateProfile({
-      wallet_address: address,
-      username: username || `User${address.slice(-4)}`,
-      total_cards: profile?.total_cards || 0,
-      favorite_wave: profile?.favorite_wave,
-      last_login: new Date().toISOString()
-    });
-
-    if (updated) {
-      setIsEditing(false);
-    }
+    const updatedProfile = {
+      ...profile,
+      username: username || `User${address.slice(-4)}`
+    };
+    
+    setProfile(updatedProfile);
+    localStorage.setItem(`profile_${address}`, JSON.stringify(updatedProfile));
+    setIsEditing(false);
   };
 
   if (!address) {
     return null;
-  }
-
-  if (loading) {
-    return (
-      <div className={`bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 ${className}`}>
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          <span className="text-white/80">Loading profile...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={`bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 ${className}`}>
-        <div className="text-red-400 text-sm">Profile error: {error}</div>
-      </div>
-    );
   }
 
   return (
@@ -120,34 +109,24 @@ export function UserProfile({ className = '' }: UserProfileProps) {
           <div>
             <label className="text-white/60 text-xs">Total Cards</label>
             <div className="text-white font-bold text-lg">
-              {profile?.total_cards || 0}
+              {profile?.totalCards || 0}
             </div>
           </div>
           
           <div>
             <label className="text-white/60 text-xs">Favorite Wave</label>
             <div className="text-white capitalize">
-              {profile?.favorite_wave || 'None'}
+              {profile?.favoriteWave || 'None'}
             </div>
           </div>
         </div>
 
         {/* Member Since */}
-        {profile?.created_at && (
+        {profile?.memberSince && (
           <div>
             <label className="text-white/60 text-xs">Member Since</label>
             <div className="text-white text-sm">
-              {new Date(profile.created_at).toLocaleDateString()}
-            </div>
-          </div>
-        )}
-
-        {/* Last Login */}
-        {profile?.last_login && (
-          <div>
-            <label className="text-white/60 text-xs">Last Active</label>
-            <div className="text-white text-sm">
-              {new Date(profile.last_login).toLocaleDateString()}
+              {new Date(profile.memberSince).toLocaleDateString()}
             </div>
           </div>
         )}
@@ -157,10 +136,9 @@ export function UserProfile({ className = '' }: UserProfileProps) {
           <div className="flex gap-2 pt-2">
             <button
               onClick={handleSave}
-              disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white py-2 rounded-lg text-sm transition-colors"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm transition-colors"
             >
-              {loading ? 'Saving...' : 'Save'}
+              Save
             </button>
             <button
               onClick={() => {

@@ -78,7 +78,20 @@ export function UserNFTCollection({ className = '' }: UserNFTCollectionProps) {
           if (cardResponse.ok) {
             const cardData = await cardResponse.json();
             
-            if (cardData.success && cardData.data.owner === address) {
+            // Normalize addresses for comparison (both to non-bounceable format)
+            const normalizeAddress = (addr: string) => {
+              try {
+                // Remove any existing format and compare base address
+                return addr.replace(/^[UE]Q/, 'kQ');
+              } catch {
+                return addr;
+              }
+            };
+
+            const userAddress = normalizeAddress(address);
+            const ownerAddress = normalizeAddress(cardData.data.owner || '');
+            
+            if (cardData.success && (ownerAddress === userAddress || cardData.data.owner === address)) {
               userCards.push({
                 index: i.toString(),
                 address: cardData.data.nftAddress,
