@@ -44,7 +44,32 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
   const [error, setError] = useState<string | null>(null);
   const [selectedCard, setSelectedCard] = useState<NFTCard | null>(null);
 
-  // Fetch user's NFT cards from database
+  // Sync blockchain data with database
+  const syncWithBlockchain = async () => {
+    if (!address) return;
+
+    try {
+      console.log('Syncing blockchain data with database...');
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://cryptoarena-backend.onrender.com';
+      
+      // Trigger sync endpoint
+      const response = await fetch(`${backendUrl}/api/v1/nft/user/${address}/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Sync completed:', data);
+      }
+    } catch (error) {
+      console.error('Sync failed:', error);
+    }
+  };
+
+  // Fetch user's NFT cards from database only
   const fetchUserCards = async () => {
     if (!address) {
       setCards([]);
@@ -76,6 +101,11 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
       }));
 
       setCards(transformedCards);
+      
+      // If no cards found, show helpful message
+      if (transformedCards.length === 0) {
+        setError('No NFT cards found. Try syncing with blockchain or minting some cards first!');
+      }
     } catch (error) {
       console.error('Error fetching user cards:', error);
       setError(error instanceof Error ? error.message : 'Failed to load your NFT cards');
@@ -120,6 +150,16 @@ export function UserNFTCollectionDB({ className = '' }: UserNFTCollectionProps) 
         <h3 className="text-lg font-semibold text-gray-900">🎴 Your NFT Collection (Database)</h3>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">{cards.length} cards</span>
+          <button
+            onClick={async () => {
+              await syncWithBlockchain();
+              await fetchUserCards();
+            }}
+            disabled={loading}
+            className="px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded disabled:opacity-50"
+          >
+            {loading ? '⏳' : '⛓️'} Sync Blockchain
+          </button>
           <button
             onClick={fetchUserCards}
             disabled={loading}
