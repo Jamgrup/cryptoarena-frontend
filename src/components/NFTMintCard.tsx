@@ -354,11 +354,11 @@ export function NFTMintCard() {
           <div className={`relative p-1 rounded-xl bg-gradient-to-b ${getRarityColorClass(currentCard.rarity)}`}>
             <div className="bg-gray-900 rounded-lg p-4 min-w-[300px]">
               <div className="text-center mb-4">
-                <h3 className={`text-lg font-bold ${getRarityColor(currentCard.rarity)} capitalize`}>
+                <h3 className={`text-lg font-bold ${getRarityColor(currentCard.rarity as 'common' | 'rare' | 'epic' | 'legendary')} capitalize`}>
                   {currentCard.name}
                 </h3>
                 <div className="flex justify-center items-center gap-2 mt-2">
-                  <span className={`text-xs px-2 py-1 rounded ${getRarityColor(currentCard.rarity)} bg-gray-800 border border-current`}>
+                  <span className={`text-xs px-2 py-1 rounded ${getRarityColor(currentCard.rarity as 'common' | 'rare' | 'epic' | 'legendary')} bg-gray-800 border border-current`}>
                     {currentCard.rarity.toUpperCase()}
                   </span>
                   <span className="text-xs text-gray-400">
@@ -388,7 +388,7 @@ export function NFTMintCard() {
               </div>
 
               <div className="mt-4 text-center">
-                <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${getWaveColor(currentWave)} bg-gray-800 border border-current`}>
+                <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${getWaveColor(currentWave as 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple')} bg-gray-800 border border-current`}>
                   {currentWave.toUpperCase()} WAVE
                 </div>
               </div>
